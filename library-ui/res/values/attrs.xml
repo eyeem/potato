@@ -1,0 +1,8 @@
+<resources>
+
+    <declare-styleable name="PollListView">
+        <attr name="problems_text" format="reference" />
+        <attr name="progress_text" format="reference" />
+    </declare-styleable>
+
+</resources>
