@@ -31,7 +31,7 @@ public abstract class Poll<T> {
    protected abstract int appendNewItems(ArrayList<T> newItems, Poll.Listener listener);
    protected abstract int appendOldItems(ArrayList<T> oldItems, Poll.Listener listener);
    protected abstract String getSuccessMessage(Context ctx, int newCount);
-   
+
    private RefreshTask updating;
    private RefreshTask fetchingMore;
 
@@ -47,7 +47,7 @@ public abstract class Poll<T> {
    public synchronized void update(final Listener listener) {
       if (updating == null || updating.working == false) {
          updating = new RefreshTask() {
-            
+
             @Override
             protected ArrayList<T> doInBackground(Void... params) {
                try {
@@ -94,7 +94,7 @@ public abstract class Poll<T> {
       }
       if (fetchingMore == null || fetchingMore.working == false) {
          fetchingMore = new RefreshTask() {
-            
+
             @Override
             protected ArrayList<T> doInBackground(Void... params) {
                try {
@@ -105,7 +105,7 @@ public abstract class Poll<T> {
                }
                return new ArrayList<T>();
             }
-            
+
             @Override
             public int itemsAction(ArrayList<T> result) throws Throwable {
                return appendOldItems(result, listener);
@@ -141,14 +141,14 @@ public abstract class Poll<T> {
       @Override
       protected void onPostExecute(ArrayList<T> result) {
          super.onPostExecute(result);
-         
+
          int addedItemsCount = 0;
          try {
             addedItemsCount = itemsAction(result);
          } catch (Throwable e) {
             error = e;
          }
-         
+
          if (error != null) {
             onError(error);
          } else if (result != null) {
@@ -169,10 +169,12 @@ public abstract class Poll<T> {
       }
 
       @Override
-      protected void onCancelled(ArrayList<T> result) {
+      protected void onCancelled() {
+         super.onCancelled();
          onError(error);
          working = false;
       }
+
 
       protected void onStateChanged() {
          for (Listener listener : listeners)
@@ -206,7 +208,7 @@ public abstract class Poll<T> {
    }
 
    public boolean okToSave() { return true; }
-   
+
    public void resetLastTimeUpdated() {
       lastTimeUpdated = 0;
    }
