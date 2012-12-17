@@ -19,6 +19,14 @@ import com.eyeem.storage.Storage.Subscription;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
+/**
+ * ListView for {@link Poll}. Takes care of calling {@link Poll}'s functions,
+ * provides all the goodies like pull-to-refresh and infinite scroll. All you
+ * need to do is provide {@link Poll} & {@link PollAdapter} instances and call
+ * {@link #onPause()} & {@link #onResume()} in Activity's lifecycle. Aditionally
+ * you might want to provide no content/connection views using
+ * {@link #setNoConnectionView(View)} & {@link #setNoContentView(View)}
+ */
 @SuppressWarnings("rawtypes")
 public class PollListView extends PullToRefreshListView {
 
@@ -30,7 +38,16 @@ public class PollListView extends PullToRefreshListView {
    BaseAdapter currentAdapter;
    View hackingEmptyView;
 
+   /**
+    * Problems text displayed in pull to refresh header
+    * when there are connection problems
+    */
    int problemsLabelId;
+
+   /**
+    * Progress text displayed in pull to refresh header
+    * when refreshing.
+    */
    int progressLabelId;
 
    public PollListView(Context context) {
@@ -51,16 +68,27 @@ public class PollListView extends PullToRefreshListView {
       arr.recycle();
    }
 
+   /**
+    * Setter for the refresh indicator
+    * @param indicator
+    */
    public void setBusyIndicator(BusyIndicator indicator){
       this.indicator = indicator;
    }
 
+   /**
+    * Setter for {@link Poll}
+    * @param poll
+    */
    public void setPoll(Poll poll) {
       this.poll = poll;
       setOnRefreshListener(refreshListener);
       getRefreshableView().setOnScrollListener(scrollListener);
    }
 
+   /**
+    * Call in Activity's or Fragment's onPause
+    */
    public void onPause() {
       if (poll != null) {
          poll.list.unsubscribe(subscription);
@@ -70,6 +98,9 @@ public class PollListView extends PullToRefreshListView {
       }
    }
 
+   /**
+    * Call in Activity's or Fragment's onResume
+    */
    public void onResume() {
       if (poll != null) {
          poll.list.subscribe(subscription);
@@ -86,15 +117,28 @@ public class PollListView extends PullToRefreshListView {
       }
    }
 
+   /**
+    * Set view that will be displayed when there is no content
+    * and no connection
+    * @param view
+    */
    public void setNoConnectionView(View view) {
       noConnectionAdapter = new EmptyViewAdapter(view);
    }
 
+   /**
+    * Set view that will be displayed when there is no content
+    * @param view
+    */
    public void setNoContentView(View view) {
       hackingEmptyView = view;
       noContentAdapter = new EmptyViewAdapter(view);
    }
 
+   /**
+    * Setter for {@link PollAdapter}
+    * @param adapter
+    */
    public void setDataAdapter(PollAdapter adapter) {
       dataAdapter = adapter;
       reloadAdapters();
@@ -139,8 +183,7 @@ public class PollListView extends PullToRefreshListView {
     * FLING mode. This allows to avoid expensive image loading tasks.
     * Also performs calls on Views to refresh images.
     *
-    * This allso issues poll calls for older content.
-    * @author vishna
+    * This allso issues poll calls for older content, aka infinite scroll.
     */
    private OnScrollListener scrollListener = new OnScrollListener() {
 
@@ -303,18 +346,52 @@ public class PollListView extends PullToRefreshListView {
       }
    };
 
+   /**
+    * Update/refresh content
+    */
    public void update() {
       poll.update(updateListener);
    }
 
    public interface PollAdapter extends android.widget.ListAdapter, android.widget.SpinnerAdapter {
+      /**
+       * Sets adapter in busy state during scroll FLING. Usually this tells
+       * adapter there is a fast ongoing scroll and it's better not to allocate
+       * any big objects (e.g. bitmaps) to avoid flickering. Aka drawing + memory
+       * allocation sucks big time on Android.
+       * @param value
+       */
       public void setBusy(boolean value);
+
       public void notifyDataSetChanged();
+
+      /**
+       * This is called after list has returned from FLING mode. This gives
+       * opportunity to implementing classes to go through ListView hierarchy
+       * and refresh/invalidate views.
+       * @param lv
+       */
       public void refreshViews(ListView lv);
+
+      /**
+       * Returns id for the given scroll position
+       * @param position
+       * @return
+       */
       public String idForPosition(int position);
+
+      /**
+       * Returns position of the given id.
+       * @param id
+       * @return
+       */
       public int positionForId(String id);
    }
 
+   /**
+    * Indicates list view being busy. E.g. spinner when content
+    * is being loaded in the background thread.
+    */
    public interface BusyIndicator {
       public void setBusyIndicator(boolean busy_flag);
    }
