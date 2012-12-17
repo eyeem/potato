@@ -1,16 +1,17 @@
 Potato Library
 =================
 
-Potato Library is an object oriented observable storage & content polling
-solution in one. Wrote for Android by EyeEm. It will come with bacon &
-whisky in the future.
+Sick of Android ContentProvider & SQLite database nonsense? This might be your next
+favorite library. An object oriented observable storage & content polling
+solution in one. Simpler than counting to potato.
 
 Usage
 ============
 The following code snippets cover basics of this library. For more see
 sample apps.
 ``` java
-// First off extend Storage class e.g.
+// Let's say we need to store Tweet objects, first
+// we need to extend Storage
 class TweetStorage extends Storage<Tweet> {
 
    public TweetStorage(Context context) {
@@ -78,8 +79,8 @@ class TimelineActivity extends Activity {
       super.onCreate(bundle);
 
       // setup poll
-      poll = new HomeTimeline();
-      poll.setStorage(TweetStorage.getInstance().obtainList("home_timeline"););
+      poll = new HomeTimelinePoll();
+      poll.setStorage(TweetStorage.getInstance().obtainList("home_timeline"));
 
       // setup list view
       listView = (PollListView) findViewById(R.id.myListView);
