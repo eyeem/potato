@@ -10,9 +10,21 @@ import com.eyeem.storage.Storage;
 import com.eyeem.storage.Storage.List;
 
 
+/**
+ * Subclass of Poll taking care of paginated polling.
+ *
+ * @param <T>
+ */
 public abstract class PaginatedPoll<T> extends Poll<T> {
 
+   /**
+    * Limit of items to be returned per API call
+    */
    protected int limit;
+
+   /**
+    * Number of items in the gap.
+    */
    protected int removedCount;
 
    public PaginatedPoll() {
@@ -98,8 +110,17 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       super.setStorage(list);
    }
 
+   /**
+    * Override and return {@link Comparator} object if you wish
+    * to sort items on the list.
+    * @return {@link Comparator} instance or null for no sorting
+    */
    protected abstract Comparator<T> comparator();
 
+   /**
+    * Pagination offset
+    * @return
+    */
    public int offset() {
       return removedCount + Math.max(list.size(), limit);
    }

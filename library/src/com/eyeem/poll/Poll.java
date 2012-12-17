@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.eyeem.storage.Storage;
+import com.eyeem.storage.Storage.List;
 
 /**
  * Base class for polling. Works in combination with {@link Storage}
@@ -213,7 +214,16 @@ public abstract class Poll<T> {
       fetchingMore.refresh(listener);
    }
 
+   /**
+    * Sets the associated {@link List}
+    * @param list
+    */
    public void setStorage(Storage<T>.List list) { this.list = list; }
+
+   /**
+    * Getter for the Poll's associated {@link List}
+    * @return
+    */
    public Storage<T>.List getStorage() { return list; }
 
    /**
