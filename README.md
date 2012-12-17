@@ -7,6 +7,8 @@ whisky in the future.
 
 Usage
 ============
+The following code snippets cover basics of this library. For more see
+sample apps.
 ``` java
 // First off extend Storage class e.g.
 class TweetStorage extends Storage<Tweet> {
@@ -43,6 +45,61 @@ class TweetStorage extends Storage<Tweet> {
       return sInstance;
    }
 }
+
+// ... now somewhere you should be able to do things like:
+TweetStorage.List homeTimeline = TweetStorage.obtainList("home_timeline");
+homeTimeline.subscribe(new Subscription() {
+      @Override
+      public void onUpdate() {
+         // ...OMG MOAR TWEETS
+         // add code here to update UI
+      }
+   });
+homeTimeline.addAll(newTweetsIFetchedFromTheInternet);
+```
+
+There's more to the potato! You can use Poll class to manage content fetching
+and combine it with some predefined UI components.
+
+``` java
+// ...and bind the Poll with PollListView
+
+class TimelineActivity extends Activity {
+
+   class HomeTimelinePoll extends Poll<Tweet> {
+      // ...API CALLS HERE
+   }
+
+   PollListView listView;
+   HomeTimelinePoll poll;
+
+   @Override
+   protected void onCreate(Bundle bundle) {
+      super.onCreate(bundle);
+
+      // setup poll
+      poll = new HomeTimeline();
+      poll.setStorage(TweetStorage.getInstance().obtainList("home_timeline"););
+
+      // setup list view
+      listView = (PollListView) findViewById(R.id.myListView);
+      listView.setPoll(poll);
+      listView.setDataAdapter(new TweetAdapter());
+   }
+
+   @Override
+   protected void onResume() {
+      listView.onResume();
+   }
+
+   @Override
+   protected void onPause() {
+      listView.onPause();
+   }
+}
+
+
+
 ```
 
 Developed By
