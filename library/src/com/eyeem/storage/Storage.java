@@ -23,6 +23,25 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+/**
+ * Observable storage for objects of type {@link T}. All objects
+ * are stored in a {@link LruCache}. Stored items can be accessed
+ * directly via {@link #get(String)} or they can be organized into
+ * {@link List}s. Any change in storage is reflected in relevant
+ * {@link List}s. These changes can be observed using #{@link Subscription}.
+ * One can subscribe to be notified of single object changes using
+ * {@link #subscribe(String, Subscription)} or list changes using
+ * {@link List#subscribe(Subscription)}
+ *
+ * <p>
+ * Within storage there can be only one {@link T} item with the given id but
+ * it can appear in multiple @{link List}s.
+ *
+ * <p>
+ * Subclasses must implement {@link #id(Object)} method to identify objects
+ * that are stored and {@link #classname()} returning {@link Class}.
+ * @param <T>
+ */
 @SuppressWarnings("unchecked")
 public abstract class Storage<T> {
 
@@ -38,6 +57,10 @@ public abstract class Storage<T> {
       this.context = context;
    }
 
+   /**
+    * Initalize storage, make sure you run this only once
+    * @param size
+    */
    public void init(int size) {
       cache = new LruCache<String, T>(this.size = size);
       lists = new HashMap<String, List>();
@@ -45,12 +68,20 @@ public abstract class Storage<T> {
       storage = this;
    }
 
+   /**
+    * Removes all items and lists from storage
+    */
    public void clearAll() {
       for (List list : lists.values())
          list.clear();
       cache.evictAll();
    }
 
+   /**
+    * Deletes single item from storage and removes
+    * all references in lists
+    * @param id
+    */
    public void delete(String id) {
       T toBeRemoved;
       if ((toBeRemoved = cache.remove(id)) != null) {
@@ -64,14 +95,29 @@ public abstract class Storage<T> {
       unsubscribeAll(id);
    }
 
+   /**
+    * Checks if item with the given id is in the storage
+    * @param id
+    * @return
+    */
    public boolean contains(String id) {
       return cache != null && id != null && cache.get(id) != null;
    }
 
+   /**
+    * Gets item by its id
+    * @param id
+    * @return
+    */
    public T get(String id) {
       return cache == null ? null : cache.get(id);
    }
 
+   /**
+    * Pushes an item to storage, notifies all relevant
+    * item & lists subscribers.
+    * @param t
+    */
    public void push(T t) {
       String id = id(t);
       cache.put(id(t), t);
@@ -85,6 +131,11 @@ public abstract class Storage<T> {
       }
    }
 
+   /**
+    * Adds subscription for the item
+    * @param id
+    * @param subscription
+    */
    public void subscribe(String id, Subscription subscription) {
       if (subscribers.get(id) == null) {
          subscribers.put(id, new Subscribers());
@@ -92,12 +143,21 @@ public abstract class Storage<T> {
       subscribers.get(id).addSubscriber(subscription);
    }
 
+   /**
+    * Unsubscribe from item notifications
+    * @param id
+    * @param subscription
+    */
    public void unsubscribe(String id, Subscription subscription) {
       if (subscribers.get(id) == null)
          return;
       subscribers.get(id).removeSubscriber(subscription);
    }
 
+   /**
+    * Remove all item subscriptions
+    * @param id
+    */
    public void unsubscribeAll(String id) {
       if (subscribers.get(id) == null)
          return;
@@ -108,6 +168,11 @@ public abstract class Storage<T> {
       cache.put(id, object);
    }
 
+   /**
+    * Lazy initializes instance of {@link List}.
+    * @param name List's name
+    * @return
+    */
    public List obtainList(String name) {
       if (lists.get(name) == null) {
          List list = new List(name);
@@ -116,6 +181,10 @@ public abstract class Storage<T> {
       return lists.get(name);
    }
 
+   /**
+    * Removes the list
+    * @param name
+    */
    public void removeList(String name) {
       lists.remove(name);
    }
@@ -124,6 +193,11 @@ public abstract class Storage<T> {
       // TODO check which ids exist in other lists and don't remove those from cache
    }
 
+   /**
+    * Keeps items on the list, removes everything else
+    * @param list to be preserved
+    * @return removed items count
+    */
    public int retainList(List list) {
       int count = 0;
       Map<String, T> snapshot = cache.snapshot();
@@ -140,12 +214,36 @@ public abstract class Storage<T> {
       return count;
    }
 
+   /**
+    * Current storage items count
+    * @return
+    */
    public int currentSize() { return cache.snapshot().size(); }
+
+   /**
+    * Max allowed storage items count
+    * @return
+    */
    public int maxSize() { return size; }
 
+   /**
+    * Unique item identifier
+    * @param object
+    * @return
+    */
    public abstract String id(T object);
+
+   /**
+    * @return Associated template {@link Class}
+    */
    public abstract Class<T> classname();
 
+   /**
+    * {link Storage}'s lightweight array. This is a facade
+    * containing just item ids. Within storage there can be
+    * only one item with the given id but it can be listed in
+    * several locations.
+    */
    public class List implements Iterable<T>, java.util.List<T> {
       private Vector<String> ids;
       private Subscribers subscribers;
@@ -176,14 +274,25 @@ public abstract class Storage<T> {
          mute();
       }
 
+      /**
+       * Subscribe to list notifications
+       * @param subscription
+       */
       public void subscribe(Subscription subscription) {
          subscribers.addSubscriber(subscription);
       }
 
+      /**
+       * Unsubscribe from list notifications
+       * @param subscription
+       */
       public void unsubscribe(Subscription subscription) {
          subscribers.removeSubscriber(subscription);
       }
 
+      /**
+       * Unsubscribe all notifications
+       */
       public void unsubscribeAll() {
          subscribers.removeAllSubscribers();
       }
@@ -196,6 +305,9 @@ public abstract class Storage<T> {
          return dirname() + name + ".json";
       }
 
+      /**
+       * Load items from persistence. Async.
+       */
       public void load() {
          if (size() > 0)
             return;
@@ -218,6 +330,9 @@ public abstract class Storage<T> {
          t.run();
       }
 
+      /**
+       * Persist items. Async.
+       */
       public void save() {
          Thread t = new Thread(new Runnable() {
             @Override
@@ -472,11 +587,22 @@ public abstract class Storage<T> {
       private Comparator<T> comparator;
       private boolean dedupe;
 
+      /**
+       * If you wish list to be sorted, provide comparator. If you
+       * pass null, sorting is disabled (default).
+       * @param comparator
+       */
       public void enableSort(Comparator<T> comparator) {
          this.comparator = comparator;
          sort();
       }
 
+      /**
+       * Enable duplicate removal. By default this is off.
+       * Note this doesn't mean items are duplicated in memory/cache.
+       * Same item (id) can be listed multiple times on the {link List} though.
+       * @param dedupe
+       */
       public void enableDedupe(boolean dedupe) {
          this.dedupe = dedupe;
          if (dedupe && ids.size() > 1) {
@@ -503,6 +629,10 @@ public abstract class Storage<T> {
          });
       }
 
+      /**
+       * Trim list to the given size.
+       * @param size
+       */
       public void trim(int size) {
          Vector<String> trimmed = new Vector<String>(size);
          trimmed.addAll(ids.subList(0, Math.min(ids.size(), size)));
@@ -511,6 +641,7 @@ public abstract class Storage<T> {
       }
 
       /**
+       * Same as {@link #trim(int)} just happens at the end.
        * @param size
        * @return removed items count
        */
@@ -544,23 +675,32 @@ public abstract class Storage<T> {
          return gapSize;
       }
 
+      /**
+       * Causes notifications not to be propagated to subscribers
+       */
       public void mute() {
          subscribers.mute();
       }
 
+      /**
+       * Reverts {@link #mute()}.
+       */
       public void unmute() {
          subscribers.unmute();
       }
 
       /**
        * Returns copy of the list on which you can make changes
-       * and then commit once you're done
+       * and then {@link #commit()} once you're done
        * @return
        */
       public List transaction() {
          return new List(this);
       }
 
+      /**
+       * Validate transaction changes.
+       */
       public void commit() {
          if (transaction != null) {
             transaction.ids = ids;
@@ -568,10 +708,18 @@ public abstract class Storage<T> {
          }
       }
 
+      /**
+       * Last item's id.
+       * @return
+       */
       public String lastId() {
          return ids.lastElement();
       }
 
+      /**
+       * If list contains null items, clears the list.
+       * @return true if list is consistent (has no null items)
+       */
       public boolean ensureConsistence() {
          for (String id : ids) {
             if (cache.get(id) == null) {
@@ -583,21 +731,44 @@ public abstract class Storage<T> {
          return true;
       }
 
+      /**
+       * @return Associated {@link Storage} item.
+       */
       public Storage<T> getStorage() { return storage; }
 
+      /**
+       * Item's id for the given position.
+       * @param position
+       * @return
+       */
       public String idForPosition(int position) {
          return ids.get(position);
       }
 
+      /**
+       * First array index of the given item's id.
+       * @param id
+       * @return
+       */
       public int indexOfId(String id) {
          return ids.indexOf(id);
       }
 
+      /**
+       * @param id
+       * @return Item of the given id or null.
+       */
       public T getById(String id) {
-         return storage.get(id);
+         if (ids.contains(id))
+            return storage.get(id);
+         else
+            return null;
       }
    }
 
+   /**
+    * Facility to manage Subscribers
+    */
    public static class Subscribers {
       private boolean muted;
       private ArrayList<Subscription> subscriptions = new ArrayList<Subscription>();
@@ -626,6 +797,10 @@ public abstract class Storage<T> {
       private void unmute() {muted = false;}
    }
 
+   /**
+    * Interface to receiving notifications on {@link Storage}
+    * and {@link List} items.
+    */
    public interface Subscription {
       public void onUpdate();
    }
