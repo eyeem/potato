@@ -103,6 +103,10 @@ public class PollListView extends PullToRefreshListView {
     */
    public void onResume() {
       if (poll != null) {
+         
+         //FIXME: Hotfix to avoid empty lists if objects are deleted by cache and poll is already exhausted 
+         poll.exhausted = false;
+         
          poll.list.subscribe(subscription);
          if (!poll.list.ensureConsistence() || poll.list.isEmpty()) {
             poll.resetLastTimeUpdated();
