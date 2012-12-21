@@ -81,24 +81,21 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
          if (list.contains(item))
             count--;
       }
-      if (count > 0) {
-         if (count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
-            if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Hitting storage capacity, trimming list.");
-            String idBefore = listener.getCurrentId();
-            List transaction = list.transaction();
-            removedCount += transaction.makeGap(limit) + limit; // FIXME why +limit
-            int removedCount = transaction.getStorage().retainList((List) transaction);
-            if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Freed "+removedCount+" elements from storage.");
-            transaction.addAll(oldItems);
-            transaction.commit();
-            listener.onTrim(idBefore);
-         } else {
-            list.addAll(oldItems);
-         }
+      if (count > 0 && count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
+         if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Hitting storage capacity, trimming list.");
+         String idBefore = listener.getCurrentId();
+         List transaction = list.transaction();
+         removedCount += transaction.makeGap(limit) + limit; // FIXME why +limit
+         int removedCount = transaction.getStorage().retainList((List) transaction);
+         if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Freed "+removedCount+" elements from storage.");
+         transaction.addAll(oldItems);
+         transaction.commit();
+         listener.onTrim(idBefore);
       } else {
-         exhausted = true;
+         list.addAll(oldItems);
+         if (count == 0)
+            exhausted = true;
       }
-
       return count;
    }
 
