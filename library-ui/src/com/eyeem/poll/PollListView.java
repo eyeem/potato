@@ -225,7 +225,7 @@ public class PollListView extends PullToRefreshListView {
       public String getCurrentId() {
          try {
             // int i = getRefreshableView().getFirstVisiblePosition();
-            int i = getRefreshableView().getLastVisiblePosition() - getRefreshableView().getHeaderViewsCount();
+            int i = Math.min(poll.getStorage().size()-1, getRefreshableView().getLastVisiblePosition() - getRefreshableView().getHeaderViewsCount());
             return dataAdapter.idForPosition(i);
          } catch (Throwable t) {
             return null;
