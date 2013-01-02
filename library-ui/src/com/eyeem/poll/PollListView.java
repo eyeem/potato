@@ -37,6 +37,7 @@ public class PollListView extends PullToRefreshListView {
    BaseAdapter noConnectionAdapter;
    BaseAdapter currentAdapter;
    View hackingEmptyView;
+   Runnable customRefreshRunnable;
 
    /**
     * Problems text displayed in pull to refresh header
@@ -76,6 +77,14 @@ public class PollListView extends PullToRefreshListView {
       this.indicator = indicator;
    }
 
+   /**
+    * Custom Runnable which will be executed on pull to refresh
+    * @param refreshRunnable
+    */
+   public void setCustomRefreshRunnable(Runnable refreshRunnable){
+      this.customRefreshRunnable = refreshRunnable;
+   }
+   
    /**
     * Setter for {@link Poll}
     * @param poll
@@ -177,6 +186,8 @@ public class PollListView extends PullToRefreshListView {
       public void onRefresh(PullToRefreshBase<ListView> refreshView) {
          if (poll != null) {
             poll.update(updateListener);
+            if (customRefreshRunnable != null)
+               customRefreshRunnable.run();
          }
       }
 
