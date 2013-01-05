@@ -323,20 +323,31 @@ public abstract class Storage<T> {
          Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-               Kryo kyro = new Kryo();
-               try {
-                  Input input = new Input(new FileInputStream(filename()));
-                  ArrayList<T> list = kyro.readObject(input, ArrayList.class);
-                  input.close();
-                  addAll(list);
-                  // FIXME don't add objects that already exist in cache as they're most likely fresher
-               } catch (Throwable e) {
-                  Log.e(classname().getSimpleName(), "load() error", e);
-               }
+               loadSync();
             }
          });
          t.setPriority(Thread.MIN_PRIORITY);
          t.run();
+      }
+
+      /**
+       * Load objects from associated json file and appends them
+       * to the end of the list
+       * @return
+       */
+      public boolean loadSync() {
+         Kryo kyro = new Kryo();
+         try {
+            Input input = new Input(new FileInputStream(filename()));
+            ArrayList<T> list = kyro.readObject(input, ArrayList.class);
+            input.close();
+            addAll(list);
+            return true;
+            // FIXME don't add objects that already exist in cache as they're most likely fresher
+         } catch (Throwable e) {
+            Log.e(classname().getSimpleName(), "load() error", e);
+            return false;
+         }
       }
 
       /**
@@ -346,21 +357,31 @@ public abstract class Storage<T> {
          Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-               try {
-                  File dir = new File(dirname());
-                  dir.mkdirs();
-                  Kryo kyro = new Kryo();
-                  Output output;
-                  output = new Output(new FileOutputStream(filename()));
-                  kyro.writeObject(output, toArrayList(trimSize));
-                  output.close();
-               } catch (Throwable e) {
-                  Log.e(classname().getSimpleName(), "save() error", e);
-               }
+               saveSync();
             }
          });
          t.setPriority(Thread.MIN_PRIORITY);
          t.run();
+      }
+
+      /**
+       * Save items synchronously. Mind the trimSize setting.
+       * @return true if successful, false otherwise.
+       */
+      public boolean saveSync() {
+         try {
+            File dir = new File(dirname());
+            dir.mkdirs();
+            Kryo kyro = new Kryo();
+            Output output;
+            output = new Output(new FileOutputStream(filename()));
+            kyro.writeObject(output, toArrayList(trimSize));
+            output.close();
+            return true;
+         } catch (Throwable e) {
+            Log.e(classname().getSimpleName(), "save() error", e);
+            return false;
+         }
       }
 
       @Override
@@ -507,6 +528,19 @@ public abstract class Storage<T> {
          ids.remove(id);
          subscribers.updateAll(Subscription.REMOVE);
          return cache.get(id);
+      }
+
+      /**
+       * Removes object by its id
+       * @param id
+       * @return removed object
+       */
+      public T removeById(String id) {
+         int index = indexOfId(id);
+         if (index >= 0)
+            return remove(index);
+         else
+            return null;
       }
 
       @Override
