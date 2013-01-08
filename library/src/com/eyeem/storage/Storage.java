@@ -78,6 +78,25 @@ public abstract class Storage<T> {
    }
 
    /**
+    * Saves all lists
+    */
+   public void saveAll() {
+      for (List list : lists.values())
+         list.save();
+   }
+
+   /**
+    * Saves selected lists
+    * @param selectedLists
+    */
+   public void save(java.util.List<String> selectedLists) {
+      for (List list : lists.values()) {
+         if (selectedLists.contains(list.name))
+            list.save();
+      }
+   }
+
+   /**
     * Deletes single item from storage and removes
     * all references in lists
     * @param id
@@ -259,12 +278,22 @@ public abstract class Storage<T> {
       private String name;
       protected int trimSize;
       protected List transaction;
+      protected Object meta;
 
       private List(String name) {
          ids = new Vector<String>();
          subscribers = new Subscribers();
          this.name = name;
          trimSize = 30;
+      }
+
+      public List setMeta(Object meta) {
+         this.meta = meta;
+         return this;
+      }
+
+      public Object getMeta() {
+         return meta;
       }
 
       /**
