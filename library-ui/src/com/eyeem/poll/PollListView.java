@@ -305,7 +305,9 @@ public class PollListView extends PullToRefreshListView {
 
       @Override
       public void onSuccess(int newCount) {
-         messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
+         if (poll != null)
+            messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
+         
          if (indicator != null)
             indicator.setBusyIndicator(false);
       }
