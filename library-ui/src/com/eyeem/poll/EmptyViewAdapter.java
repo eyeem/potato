@@ -1,13 +1,16 @@
 package com.eyeem.poll;
 
+import com.eyeem.poll.PollListView.PollAdapter;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ListView;
 
 /**
  * One view custom adapter
  */
-public class EmptyViewAdapter extends BaseAdapter {
+public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    // FIXME fill parent issues
 
    View view;
@@ -21,5 +24,21 @@ public class EmptyViewAdapter extends BaseAdapter {
    @Override public long getItemId(int position) { return 0; }
    @Override public View getView(int position, View convertView, ViewGroup parent) {
       return view;
+   }
+
+   @Override
+   public void setBusy(boolean value) {}
+
+   @Override
+   public void refreshViews(ListView lv) {}
+
+   @Override
+   public String idForPosition(int position) {
+      return "";
+   }
+
+   @Override
+   public int positionForId(String id) {
+      return 0;
    }
 }
