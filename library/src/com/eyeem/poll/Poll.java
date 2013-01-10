@@ -37,9 +37,9 @@ public abstract class Poll<T> {
    public static final int STATE_NO_CONTENT = 1;
 
    /**
-    * Poll has no content due to lack of connectivity.
+    * Poll has no content due to a error.
     */
-   public static final int STATE_NO_CONNECTION = 2;
+   public static final int STATE_ERROR = 2;
 
    /**
     * Associated storage.
@@ -175,7 +175,7 @@ public abstract class Poll<T> {
             @Override
             protected void onError(Throwable error) {
                if (list.isEmpty()) {
-                  state = STATE_NO_CONNECTION;
+                  state = STATE_ERROR;
                   onStateChanged();
                }
                super.onError(error);

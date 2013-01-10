@@ -2,6 +2,7 @@ package com.eyeem.poll;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Display;
 import android.view.View;
@@ -25,7 +26,7 @@ import com.handmark.pulltorefresh.library.PullToRefreshListView;
  * need to do is provide {@link Poll} & {@link PollAdapter} instances and call
  * {@link #onPause()} & {@link #onResume()} in Activity's lifecycle. Aditionally
  * you might want to provide no content/connection views using
- * {@link #setNoConnectionView(View)} & {@link #setNoContentView(View)}
+ * {@link #setOnErrorView(View)} & {@link #setNoContentView(View)}
  */
 @SuppressWarnings("rawtypes")
 public class PollListView extends PullToRefreshListView {
@@ -34,7 +35,7 @@ public class PollListView extends PullToRefreshListView {
    BusyIndicator indicator;
    PollAdapter dataAdapter;
    BaseAdapter noContentAdapter;
-   BaseAdapter noConnectionAdapter;
+   BaseAdapter onErrorAdapter;
    BaseAdapter currentAdapter;
    View hackingEmptyView;
    Runnable customRefreshRunnable;
@@ -132,11 +133,11 @@ public class PollListView extends PullToRefreshListView {
 
    /**
     * Set view that will be displayed when there is no content
-    * and no connection
+    * due to an error
     * @param view
     */
-   public void setNoConnectionView(View view) {
-      noConnectionAdapter = new EmptyViewAdapter(view);
+   public void setOnErrorView(View view) {
+      onErrorAdapter = new EmptyViewAdapter(view);
    }
 
    /**
@@ -162,8 +163,8 @@ public class PollListView extends PullToRefreshListView {
          return noContentAdapter;
       }
 
-      if (poll.getState() == Poll.STATE_NO_CONNECTION) {
-         return noConnectionAdapter;
+      if (poll.getState() == Poll.STATE_ERROR) {
+         return onErrorAdapter;
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
          return noContentAdapter;
       }
@@ -298,7 +299,10 @@ public class PollListView extends PullToRefreshListView {
 
       @Override
       public void onError(Throwable error) {
-         messageWithDelay(getContext().getString(problemsLabelId));
+         String msg = null;
+         if (error == null || (msg = error.getMessage()) == null || TextUtils.isEmpty(msg))
+            msg = getContext().getString(problemsLabelId);
+         messageWithDelay(msg);
          if (indicator != null)
             indicator.setBusyIndicator(false);
       }
