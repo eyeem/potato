@@ -1,14 +1,16 @@
 package com.eyeem.poll;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.Display;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
+import android.widget.ListView.FixedViewInfo;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
@@ -348,9 +350,7 @@ public class PollListView extends PullToRefreshListView {
          getRefreshableView().setAdapter(currentAdapter = newAdapter);
       } 
       if (newAdapter == noContentAdapter) {
-         WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-         Display display = wm.getDefaultDisplay();
-         hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, display.getHeight()));
+         hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - headerHeight()));
       }
       newAdapter.notifyDataSetChanged();
    }
@@ -415,5 +415,22 @@ public class PollListView extends PullToRefreshListView {
     */
    public interface BusyIndicator {
       public void setBusyIndicator(boolean busy_flag);
+   }
+
+   private int headerHeight() {
+      try {
+         int h = 0;
+         ListView lv = getRefreshableView();
+         Field f = ListView.class.getDeclaredField("mHeaderViewInfos");
+         f.setAccessible(true);
+         @SuppressWarnings("unchecked")
+         ArrayList<FixedViewInfo> mHeaderViewInfos = (ArrayList<FixedViewInfo>) f.get(lv);
+         for (FixedViewInfo i : mHeaderViewInfos) {
+            h += i.view.getHeight();
+         }
+         return h;
+      } catch (Exception  e) {
+         return 0;
+      }
    }
 }
