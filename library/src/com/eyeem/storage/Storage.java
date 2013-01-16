@@ -789,7 +789,8 @@ public abstract class Storage<T> {
          if (muted)
             return;
          for (Subscription s : (ArrayList<Subscription>)subscriptions.clone()) {
-            s.onUpdate();
+            if (s != null)
+               s.onUpdate();
          }
       }
 
