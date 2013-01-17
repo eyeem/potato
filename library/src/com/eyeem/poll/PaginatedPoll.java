@@ -57,7 +57,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
                   removeGap = true;
                   break;
                }
-            };
+            }
          }
       }
       Storage<T>.List transaction = list.transaction();
@@ -84,7 +84,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       if (count > 0 && count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
          if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Hitting storage capacity, trimming list.");
          String idBefore = listener.getCurrentId();
-         List transaction = list.transaction();
+         Storage.List transaction = list.transaction();
          removedCount += transaction.makeGap(limit) + limit; // FIXME why +limit
          int removedCount = transaction.getStorage().retainList((List) transaction);
          if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Freed "+removedCount+" elements from storage.");
@@ -101,7 +101,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
 
    @SuppressWarnings({ "unchecked", "rawtypes" })
    @Override
-   public void setStorage(List list) {
+   public void setStorage(Storage.List list) {
       list.enableDedupe(true);
       list.enableSort(comparator());
       super.setStorage(list);
@@ -116,7 +116,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
 
    /**
     * Pagination offset
-    * @return
+    * @return pagination offset
     */
    public int offset() {
       return removedCount + Math.max(list.size(), limit);
