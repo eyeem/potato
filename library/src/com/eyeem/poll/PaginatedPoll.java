@@ -44,7 +44,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "update, newCount = " + newCount);
       boolean removeGap = false;
       if (!list.isEmpty()) {
-         String currentId = listener.getCurrentId();
+         String currentId = listener.getFirstVisibleId();
          Storage<T> s = list.getStorage();
          T firstItem = list.get(0);
          if (currentId.equals(s.id(firstItem))) {
@@ -83,7 +83,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       }
       if (count > 0 && count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
          if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Hitting storage capacity, trimming list.");
-         String idBefore = listener.getCurrentId();
+         String idBefore = listener.getLastVisibleId();
          Storage.List transaction = list.transaction();
          removedCount += transaction.makeGap(limit) + limit; // FIXME why +limit
          int removedCount = transaction.getStorage().retainList((List) transaction);
