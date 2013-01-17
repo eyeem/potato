@@ -264,11 +264,18 @@ public abstract class Poll<T> {
       public void onExhausted();
 
       /**
-       * Facility to tell Poll about currently viewed
-       * id
+       * Facility to tell Poll about currently last visible
+       * id.
        * @return
        */
-      public String getCurrentId();
+      public String getLastVisibleId();
+
+      /**
+       * Facility to tell Poll about currently first visible
+       * id.
+       * @return
+       */
+      public String getFirstVisibleId();
 
       /**
        * Trim action is about to happen

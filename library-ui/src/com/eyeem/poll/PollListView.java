@@ -74,22 +74,25 @@ public class PollListView extends PullToRefreshListView {
 
    /**
     * Setter for the refresh indicator
+    *
     * @param indicator
     */
-   public void setBusyIndicator(BusyIndicator indicator){
+   public void setBusyIndicator(BusyIndicator indicator) {
       this.indicator = indicator;
    }
 
    /**
     * Custom Runnable which will be executed on pull to refresh
+    *
     * @param refreshRunnable
     */
-   public void setCustomRefreshRunnable(Runnable refreshRunnable){
+   public void setCustomRefreshRunnable(Runnable refreshRunnable) {
       this.customRefreshRunnable = refreshRunnable;
    }
-   
+
    /**
     * Setter for {@link Poll}
+    *
     * @param poll
     */
    public void setPoll(Poll poll) {
@@ -115,10 +118,10 @@ public class PollListView extends PullToRefreshListView {
     */
    public void onResume() {
       if (poll != null) {
-         
+
          //FIXME: Hotfix to avoid empty lists if objects are deleted by cache and poll is already exhausted 
          poll.exhausted = false;
-         
+
          poll.list.subscribe(subscription);
          if (!poll.list.ensureConsistence() || poll.list.isEmpty()) {
             poll.resetLastTimeUpdated();
@@ -136,6 +139,7 @@ public class PollListView extends PullToRefreshListView {
    /**
     * Set view that will be displayed when there is no content
     * due to an error
+    *
     * @param view
     */
    public void setOnErrorView(View view) {
@@ -144,6 +148,7 @@ public class PollListView extends PullToRefreshListView {
 
    /**
     * Set view that will be displayed when there is no content
+    *
     * @param view
     */
    public void setNoContentView(View view) {
@@ -153,6 +158,7 @@ public class PollListView extends PullToRefreshListView {
 
    /**
     * Setter for {@link PollAdapter}
+    *
     * @param adapter
     */
    public void setDataAdapter(PollAdapter adapter) {
@@ -183,7 +189,7 @@ public class PollListView extends PullToRefreshListView {
       }, 2000);
    }
 
-   private OnRefreshListener<ListView> refreshListener = new OnRefreshListener<ListView> () {
+   private OnRefreshListener<ListView> refreshListener = new OnRefreshListener<ListView>() {
 
       @Override
       public void onRefresh(PullToRefreshBase<ListView> refreshView) {
@@ -200,7 +206,7 @@ public class PollListView extends PullToRefreshListView {
     * Basically sets adapter in busy mode whenever scroll is in
     * FLING mode. This allows to avoid expensive image loading tasks.
     * Also performs calls on Views to refresh images.
-    *
+    * <p/>
     * This allso issues poll calls for older content, aka infinite scroll.
     */
    private OnScrollListener scrollListener = new OnScrollListener() {
@@ -236,10 +242,21 @@ public class PollListView extends PullToRefreshListView {
 
    private abstract class PollListener implements Poll.Listener {
       @Override
-      public String getCurrentId() {
+      public String getLastVisibleId() {
          try {
             // int i = getRefreshableView().getFirstVisiblePosition();
-            int i = Math.min(poll.getStorage().size()-1, getRefreshableView().getLastVisiblePosition() - getRefreshableView().getHeaderViewsCount());
+            int i = Math.min(poll.getStorage().size() - 1, getRefreshableView().getLastVisiblePosition() - getRefreshableView().getHeaderViewsCount());
+            return dataAdapter.idForPosition(i);
+         } catch (Throwable t) {
+            return null;
+         }
+      }
+
+
+      @Override
+      public String getFirstVisibleId() {
+         try {
+            int i = Math.max(0, getRefreshableView().getFirstVisiblePosition());
             return dataAdapter.idForPosition(i);
          } catch (Throwable t) {
             return null;
@@ -251,7 +268,7 @@ public class PollListView extends PullToRefreshListView {
          post(new Runnable() {
             @Override
             public void run() {
-               int index =  -1;
+               int index = -1;
                index = dataAdapter.positionForId(currentId);
                // index += getRefreshableView().getHeaderViewsCount();
                if (index >= 0)
@@ -259,19 +276,21 @@ public class PollListView extends PullToRefreshListView {
             }
          });
       }
-   };
+   }
 
-   private Poll.Listener fetchListener = new PollListener () {
+   ;
+
+   private Poll.Listener fetchListener = new PollListener() {
 
       @Override
       public void onStart() {
-         if(indicator != null)
+         if (indicator != null)
             indicator.setBusyIndicator(true);
       }
 
       @Override
       public void onError(Throwable error) {
-         if(indicator != null)
+         if (indicator != null)
             indicator.setBusyIndicator(false);
       }
 
@@ -294,10 +313,11 @@ public class PollListView extends PullToRefreshListView {
       }
 
       @Override
-      public void onStateChanged(int state) {}
+      public void onStateChanged(int state) {
+      }
    };
 
-   private Poll.Listener updateListener = new PollListener () {
+   private Poll.Listener updateListener = new PollListener() {
 
       @Override
       public void onError(Throwable error) {
@@ -313,7 +333,7 @@ public class PollListView extends PullToRefreshListView {
       public void onSuccess(int newCount) {
          if (poll != null)
             messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
-         
+
          if (indicator != null)
             indicator.setBusyIndicator(false);
       }
@@ -324,7 +344,8 @@ public class PollListView extends PullToRefreshListView {
       }
 
       @Override
-      public void onExhausted() {}
+      public void onExhausted() {
+      }
 
       @Override
       public void onStart() {
@@ -345,10 +366,10 @@ public class PollListView extends PullToRefreshListView {
          return;
       if (currentAdapter != newAdapter) {
          if (getRefreshableView() instanceof StickyListHeadersListView) {
-            ((StickyListHeadersListView)getRefreshableView()).setAreHeadersSticky(newAdapter instanceof StickyListHeadersAdapter);
+            ((StickyListHeadersListView) getRefreshableView()).setAreHeadersSticky(newAdapter instanceof StickyListHeadersAdapter);
          }
          getRefreshableView().setAdapter(currentAdapter = newAdapter);
-      } 
+      }
       if (newAdapter == noContentAdapter) {
          hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - headerHeight()));
       }
@@ -380,6 +401,7 @@ public class PollListView extends PullToRefreshListView {
        * adapter there is a fast ongoing scroll and it's better not to allocate
        * any big objects (e.g. bitmaps) to avoid flickering. Aka drawing + memory
        * allocation sucks big time on Android.
+       *
        * @param value
        */
       public void setBusy(boolean value);
@@ -390,12 +412,14 @@ public class PollListView extends PullToRefreshListView {
        * This is called after list has returned from FLING mode. This gives
        * opportunity to implementing classes to go through ListView hierarchy
        * and refresh/invalidate views.
+       *
        * @param lv
        */
       public void refreshViews(ListView lv);
 
       /**
        * Returns id for the given scroll position
+       *
        * @param position
        * @return
        */
@@ -403,6 +427,7 @@ public class PollListView extends PullToRefreshListView {
 
       /**
        * Returns position of the given id.
+       *
        * @param id
        * @return
        */
@@ -429,7 +454,7 @@ public class PollListView extends PullToRefreshListView {
             h += i.view.getHeight();
          }
          return h;
-      } catch (Exception  e) {
+      } catch (Exception e) {
          return 0;
       }
    }
