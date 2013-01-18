@@ -3,10 +3,7 @@ package com.eyeem.potato.example;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.View;
-import android.view.Window;
+import android.view.*;
 
 import com.eyeem.poll.PollListView;
 import com.eyeem.poll.PollListView.BusyIndicator;
@@ -58,6 +55,14 @@ public class TimelineActivity extends Activity implements BusyIndicator{
 		super.onPause();
 		listview.onPause();
 	}
+
+   @Override
+   public boolean onKeyUp(int keyCode, KeyEvent event) {
+      if (keyCode == KeyEvent.KEYCODE_MENU) {
+         listview.update();
+      }
+      return super.onKeyUp(keyCode, event);
+   }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

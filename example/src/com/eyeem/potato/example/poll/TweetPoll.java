@@ -65,7 +65,7 @@ public class TweetPoll extends Poll<Tweet> {
 		if (newItems.size() > 0) 
 			firstElementId = newItems.get(0).getId();
 
-		list.addAll(0, newItems);
+		list.addAllUpfront(newItems);
 		return newCount;
 	}
 

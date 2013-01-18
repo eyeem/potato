@@ -36,9 +36,9 @@ public class PollListView extends PullToRefreshListView {
    Poll poll;
    BusyIndicator indicator;
    PollAdapter dataAdapter;
-   BaseAdapter noContentAdapter;
-   BaseAdapter onErrorAdapter;
-   BaseAdapter currentAdapter;
+   PollAdapter noContentAdapter;
+   PollAdapter onErrorAdapter;
+   PollAdapter currentAdapter;
    View hackingEmptyView;
    Runnable customRefreshRunnable;
 
@@ -163,10 +163,10 @@ public class PollListView extends PullToRefreshListView {
     */
    public void setDataAdapter(PollAdapter adapter) {
       dataAdapter = adapter;
-      reloadAdapters();
+      reloadAdapters(null);
    }
 
-   private BaseAdapter pickAdapter() {
+   private PollAdapter pickAdapter() {
       if (poll == null) {
          return noContentAdapter;
       }
@@ -176,7 +176,7 @@ public class PollListView extends PullToRefreshListView {
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
          return noContentAdapter;
       }
-      return (BaseAdapter) dataAdapter;
+      return dataAdapter;
    }
 
    private void messageWithDelay(String message) {
@@ -207,7 +207,7 @@ public class PollListView extends PullToRefreshListView {
     * FLING mode. This allows to avoid expensive image loading tasks.
     * Also performs calls on Views to refresh images.
     * <p/>
-    * This allso issues poll calls for older content, aka infinite scroll.
+    * This also issues poll calls for older content, aka infinite scroll.
     */
    private OnScrollListener scrollListener = new OnScrollListener() {
 
@@ -356,12 +356,12 @@ public class PollListView extends PullToRefreshListView {
 
       @Override
       public void onStateChanged(int state) {
-         reloadAdapters();
+         reloadAdapters(null);
       }
    };
 
-   private void reloadAdapters() {
-      BaseAdapter newAdapter = pickAdapter();
+   private void reloadAdapters(Subscription.Action action) {
+      PollAdapter newAdapter = pickAdapter();
       if (newAdapter == null)
          return;
       if (currentAdapter != newAdapter) {
@@ -373,16 +373,20 @@ public class PollListView extends PullToRefreshListView {
       if (newAdapter == noContentAdapter) {
          hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - headerHeight()));
       }
-      newAdapter.notifyDataSetChanged();
+      if (action == null) {
+         newAdapter.notifyDataSetChanged();
+      } else {
+         newAdapter.notifyDataWithAction(action);
+      }
    }
 
    Subscription subscription = new Subscription() {
       @Override
-      public void onUpdate() {
+      public void onUpdate(final Action action) {
          post(new Runnable() {
             @Override
             public void run() {
-               reloadAdapters();
+               reloadAdapters(action);
             }
          });
       }
@@ -407,6 +411,8 @@ public class PollListView extends PullToRefreshListView {
       public void setBusy(boolean value);
 
       public void notifyDataSetChanged();
+
+      public void notifyDataWithAction(Subscription.Action action);
 
       /**
        * This is called after list has returned from FLING mode. This gives

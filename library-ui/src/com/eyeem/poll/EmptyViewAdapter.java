@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import com.eyeem.storage.Storage;
 
 /**
  * One view custom adapter
@@ -40,5 +41,10 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    @Override
    public int positionForId(String id) {
       return 0;
+   }
+
+   @Override
+   public void notifyDataWithAction(Storage.Subscription.Action action) {
+      notifyDataSetChanged();
    }
 }

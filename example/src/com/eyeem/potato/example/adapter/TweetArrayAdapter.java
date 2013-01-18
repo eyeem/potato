@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -23,6 +25,8 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapter {
 	private Storage<Tweet>.List mTimeline = null;
 	private ImageLoader mLoader;
+   private String itemToSlideIn = null;
+   private int slideInHeight = 0;
 	
 	public TweetArrayAdapter(Context context, int textViewResourceId, String userName) {
 		super(context, textViewResourceId);
@@ -86,6 +90,27 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 			convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.adapter_bg_normal));
 			mLoader.displayImage(tweetObject.getUser().getImage(), holder.userImage);
 		}
+
+           if (!isScrollingPaused((ListView)parent) && itemToSlideIn != null) {
+              if (!idForPosition(position).equals(itemToSlideIn)) {
+                 TranslateAnimation slideIn = new TranslateAnimation(
+                    TranslateAnimation.RELATIVE_TO_SELF, 0.0f,
+                    TranslateAnimation.RELATIVE_TO_SELF, 0.0f,
+                    TranslateAnimation.ABSOLUTE, -slideInHeight,
+                    TranslateAnimation.ABSOLUTE, 0.0f);
+
+                 slideIn.setDuration(300);
+                 convertView.startAnimation(slideIn);
+              } else {
+                 AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
+                 fadeIn.setStartOffset(200);
+                 fadeIn.setDuration(300);
+                 convertView.setAnimation(fadeIn);
+                 slideInHeight = convertView.getHeight();
+              }
+           } else {
+              itemToSlideIn = null;
+           }
 		
 		return convertView;
 	}
@@ -98,11 +123,23 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 
 	@Override
 	public String idForPosition(int position) {
-		return null;
+		return mTimeline.idForPosition(position);
 	}
 
 	@Override
 	public int positionForId(String id) {
 		return 0;
 	}
+
+   @Override
+   public void notifyDataWithAction(Storage.Subscription.Action action) {
+      if (action.name.equals("addAllUpfront") && (action.beforeIds.size() + 1 == action.afterIds.size())) {
+         itemToSlideIn = action.afterIds.firstElement();
+      }
+      notifyDataSetChanged();
+   }
+
+   public boolean isScrollingPaused (ListView lv) {
+      return lv.getFirstVisiblePosition() != 0;
+   }
 }
