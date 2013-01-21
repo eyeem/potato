@@ -277,6 +277,8 @@ public abstract class Poll<T> {
        */
       public String getFirstVisibleId();
 
+      public int getFirstTop();
+
       /**
        * Trim action is about to happen
        * @param currentId

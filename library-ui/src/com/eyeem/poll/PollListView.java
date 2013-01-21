@@ -263,6 +263,14 @@ public class PollListView extends PullToRefreshListView {
          }
       }
 
+      public int getFirstTop() {
+         if (getRefreshableView().getChildCount() > 0) {
+            return getRefreshableView().getChildAt(0).getTop();
+         } else {
+            return 0;
+         }
+      }
+
       @Override
       public void onTrim(final String currentId) {
          post(new Runnable() {
@@ -376,7 +384,7 @@ public class PollListView extends PullToRefreshListView {
       if (action == null) {
          newAdapter.notifyDataSetChanged();
       } else {
-         newAdapter.notifyDataWithAction(action);
+         newAdapter.notifyDataWithAction(action, getRefreshableView());
       }
    }
 
@@ -412,7 +420,7 @@ public class PollListView extends PullToRefreshListView {
 
       public void notifyDataSetChanged();
 
-      public void notifyDataWithAction(Subscription.Action action);
+      public void notifyDataWithAction(Subscription.Action action, ListView listView);
 
       /**
        * This is called after list has returned from FLING mode. This gives

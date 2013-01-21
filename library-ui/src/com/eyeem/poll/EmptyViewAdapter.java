@@ -44,7 +44,7 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    }
 
    @Override
-   public void notifyDataWithAction(Storage.Subscription.Action action) {
+   public void notifyDataWithAction(Storage.Subscription.Action action, ListView listView) {
       notifyDataSetChanged();
    }
 }

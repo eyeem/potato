@@ -424,9 +424,9 @@ public abstract class Storage<T> {
          return value;
       }
 
-      public boolean addAllUpfront(Collection<? extends T> collection) {
-         Subscription.Action action = new Subscription.Action("addAllUpfront");
-         action.beforeIds = (Vector<String>)ids.clone();
+      public boolean addUpFront(Collection<? extends T> collection, HashMap<String, Object> params) {
+         Subscription.Action action = new Subscription.Action("addUpFront");
+         action.params = params;
          ArrayList<String> collectionIds = new ArrayList<String>();
          for (Object t : collection) {
             String id = id((T)t);
@@ -436,7 +436,6 @@ public abstract class Storage<T> {
          }
          boolean value = ids.addAll(0, collectionIds);
          sort();
-         action.afterIds = (Vector<String>)ids.clone();
          subscribers.updateAll(action);
          return value;
       }
@@ -826,17 +825,11 @@ public abstract class Storage<T> {
    public interface Subscription {
       public static class Action {
          public String name;
-         public Vector<String> beforeIds;
-         public Vector<String> afterIds;
+         public HashMap<String, Object> params;
 
          public Action(String name) {
             this.name = name;
-         }
-
-         public Action(String name, Vector<String> beforeIds, Vector<String> afterIds) {
-            this.name = name;
-            this.beforeIds = beforeIds;
-            this.afterIds = afterIds;
+            params = new HashMap<String, Object>();
          }
       }
       public void onUpdate(Action action);
