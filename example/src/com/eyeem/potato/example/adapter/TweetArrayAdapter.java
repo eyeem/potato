@@ -52,7 +52,7 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 
    @Override
    public View getView(int position, View convertView, ViewGroup parent) {
-      ViewHolder holder = null;
+      ViewHolder holder;
       if (convertView == null) {
          holder = new ViewHolder();
          convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_tweet, null);
@@ -116,33 +116,31 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
       if ("addUpFront".equals(action.name)) {
          boolean paused = isScrollingPaused(listView);
          notifyDataSetChanged();
-         int index = positionForId((String)action.params.get("firstId"));
-         int px = (Integer)action.params.get("firstTop");
-         if (paused)
-            index++; // why?
-         listView.setSelectionFromTop(index+1, px);
-         if (!paused) {
-            final int _index = index;
-            final int scrollTime = 1000;
+         final int index = positionForId((String)action.params.get("firstId"));
+         final int px = (Integer)action.params.get("firstTop");
+         if (!paused && index > 0) {
+            // WONDERS OF ANDROID: in order to freeze list at top when
+            // adding new items we need to add "1" to
+            // selected index in setSelectionFromTop
+            listView.setSelectionFromTop(index + 1, px);
             listView.postDelayed(new Runnable() {
                @Override
                public void run() {
-                  int h = 0;
-                  if (listView.getChildCount() > 0) {
-                     h += listView.getChildAt(0).getTop();
-                  }
-                  for (int i=0; i<listView.getChildCount() && i<_index; i++) {
-                     h += listView.getChildAt(i).getHeight();
-                  }
-                  listView.smoothScrollBy((int)(-h), scrollTime);
+                  int distance = 0;
+                  if (listView.getChildCount() > 0)
+                     distance = listView.getChildAt(0).getHeight() * index * 2; // approx
+
+                  listView.smoothScrollBy(-distance, 1000);
+                  listView.postDelayed(new Runnable() {
+                     @Override
+                     public void run() {
+                        listView.smoothScrollToPosition(0);
+                     }
+                  }, 1100);
                }
-            }, 100);
-            listView.postDelayed(new Runnable() {
-               @Override
-               public void run() {
-                  listView.setSelectionFromTop(0, 0);
-               }
-            }, 100 + scrollTime);
+            }, 500);
+         } else {
+            listView.setSelectionFromTop(index, px);
          }
       } else {
          notifyDataSetChanged();
