@@ -6,12 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.eyeem.poll.PollListView.PollAdapter;
+import com.eyeem.poll.AnimatedPollAdapter;
 import com.eyeem.potato.example.PotatoApplication;
 import com.eyeem.potato.example.R;
 import com.eyeem.potato.example.TimelineActivity;
@@ -20,12 +19,11 @@ import com.eyeem.potato.example.storage.TweetStorage;
 import com.eyeem.storage.Storage;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
-public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapter {
+public class TweetArrayAdapter extends AnimatedPollAdapter {
    private Storage<Tweet>.List mTimeline = null;
    private ImageLoader mLoader;
 
-   public TweetArrayAdapter(Context context, int textViewResourceId, String userName) {
-      super(context, textViewResourceId);
+   public TweetArrayAdapter(Context context, String userName) {
       mTimeline = TweetStorage.getInstance().obtainList(userName);
       mLoader = ((PotatoApplication) context.getApplicationContext()).getImageLoader();
    }
@@ -49,10 +47,11 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 
    @Override
    public View getView(int position, View convertView, ViewGroup parent) {
+      final Context context = parent.getContext();
       ViewHolder holder;
       if (convertView == null) {
          holder = new ViewHolder();
-         convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_tweet, null);
+         convertView = LayoutInflater.from(context).inflate(R.layout.adapter_tweet, null);
          holder.text = (TextView) convertView.findViewById(R.id.text);
          holder.tweet = (TextView) convertView.findViewById(R.id.tweet);
          holder.userImage = (ImageView) convertView.findViewById(R.id.user_image);
@@ -68,7 +67,7 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
       holder.userImage.setImageBitmap(null);
 
       if (tweetObject.getRetweetedUser() != null) {
-         convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.adapter_bg));
+         convertView.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.adapter_bg));
          holder.text.setVisibility(View.VISIBLE);
          holder.text.setText("Click to open timeline from " + tweetObject.getRetweetedUser().getName());
          mLoader.displayImage(tweetObject.getRetweetedUser().getImage(), holder.userImage);
@@ -76,14 +75,14 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 
             @Override
             public void onClick(View v) {
-               Intent timeline = new Intent(getContext(), TimelineActivity.class);
+               Intent timeline = new Intent(context, TimelineActivity.class);
                timeline.putExtra(TimelineActivity.EXTRA_USER_NAME, tweetObject.getRetweetedUser().getName());
-               getContext().startActivity(timeline);
+               context.startActivity(timeline);
             }
          });
       } else {
          holder.text.setVisibility(View.INVISIBLE);
-         convertView.setBackgroundDrawable(getContext().getResources().getDrawable(R.drawable.adapter_bg_normal));
+         convertView.setBackgroundDrawable(context.getResources().getDrawable(R.drawable.adapter_bg_normal));
          mLoader.displayImage(tweetObject.getUser().getImage(), holder.userImage);
       }
 
@@ -106,45 +105,5 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
    @Override
    public int positionForId(String id) {
       return mTimeline.indexOfId(id);
-   }
-
-   @Override
-   public void notifyDataWithAction(Storage.Subscription.Action action, final ListView listView) {
-      if (Storage.Subscription.ADD_UPFRONT.equals(action.name)) {
-         boolean paused = isScrollingPaused(listView);
-         notifyDataSetChanged();
-         final int index = positionForId((String)action.params.get("firstId"));
-         final int px = (Integer)action.params.get("firstTop");
-         if (!paused && index > 0) {
-            // WONDERS OF ANDROID: in order to freeze list at top when
-            // adding new items we need to add "1" to
-            // selected index in setSelectionFromTop
-            listView.setSelectionFromTop(index + 1, px);
-            listView.postDelayed(new Runnable() {
-               @Override
-               public void run() {
-                  int distance = 0;
-                  if (listView.getChildCount() > 0)
-                     distance = listView.getChildAt(0).getHeight() * index * 2; // approx
-
-                  listView.smoothScrollBy(-distance, 1000);
-                  listView.postDelayed(new Runnable() {
-                     @Override
-                     public void run() {
-                        listView.smoothScrollToPosition(0);
-                     }
-                  }, 1100);
-               }
-            }, 500);
-         } else {
-            listView.setSelectionFromTop(index, px);
-         }
-      } else {
-         notifyDataSetChanged();
-      }
-   }
-
-   public boolean isScrollingPaused(ListView lv) {
-      return lv.getFirstVisiblePosition() != 0;
    }
 }

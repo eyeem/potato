@@ -46,7 +46,7 @@ public class TimelineActivity extends Activity implements BusyIndicator {
 
       listview = (PollListView) findViewById(R.id.listview);
       listview.setPoll(new TweetPoll(this, userName));
-      listview.setDataAdapter(new TweetArrayAdapter(this, android.R.id.title, userName));
+      listview.setDataAdapter(new TweetArrayAdapter(this, userName));
       listview.setNoContentView(LayoutInflater.from(this).inflate(R.layout.view_no_content, null));
       listview.setOnErrorView(LayoutInflater.from(this).inflate(R.layout.view_no_content, null));
       listview.setBusyIndicator(this);
