@@ -2,13 +2,10 @@ package com.eyeem.potato.example.adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -113,7 +110,7 @@ public class TweetArrayAdapter extends ArrayAdapter<Tweet> implements PollAdapte
 
    @Override
    public void notifyDataWithAction(Storage.Subscription.Action action, final ListView listView) {
-      if ("addUpFront".equals(action.name)) {
+      if (Storage.Subscription.ADD_UPFRONT.equals(action.name)) {
          boolean paused = isScrollingPaused(listView);
          notifyDataSetChanged();
          final int index = positionForId((String)action.params.get("firstId"));
