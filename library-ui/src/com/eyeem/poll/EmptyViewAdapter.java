@@ -47,4 +47,8 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    public void notifyDataWithAction(Storage.Subscription.Action action, ListView listView) {
       notifyDataSetChanged();
    }
+
+   @Override
+   public void recycleBitmaps(View view) {
+   }
 }
