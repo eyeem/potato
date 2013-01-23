@@ -34,6 +34,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
                }, 500);
             } else {
                // TODO new items indicator
+               listView.setSelection(0);
             }
          } else {
             listView.setSelectionFromTop(index, px);
