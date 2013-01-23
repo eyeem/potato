@@ -10,29 +10,31 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
       if (Storage.Subscription.ADD_UPFRONT.equals(action.name)) {
          boolean paused = isScrollingPaused(listView);
          notifyDataSetChanged();
-         final int index = positionForId((String)action.params.get("firstId"));
+         int index = positionForId((String)action.params.get("firstId"));
          final int px = (Integer)action.params.get("firstTop");
          if (!paused && index > 0) {
-            // WONDERS OF ANDROID: in order to freeze list at top when
-            // adding new items we need to add "1" to
-            // selected index in setSelectionFromTop
-            listView.setSelectionFromTop(index + 1, px);
-            listView.postDelayed(new Runnable() {
-               @Override
-               public void run() {
-                  int distance = 0;
-                  if (listView.getChildCount() > 0)
-                     distance = listView.getChildAt(0).getHeight() * index * 2; // approx
-
-                  listView.smoothScrollBy(-distance, 1000);
-                  listView.postDelayed(new Runnable() {
-                     @Override
-                     public void run() {
-                        listView.smoothScrollToPosition(0);
+            listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
+            if (index == 1) {
+               listView.postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                     int offset = listView.getFirstVisiblePosition();
+                     if (offset == 0) {
+                        listView.setSelection(0);
+                        return;
                      }
-                  }, 1100);
-               }
-            }, 500);
+                     int distance = 0;
+                     int duration = 1000 * (offset + 1);
+                     if (listView.getChildCount() > 0)
+                        distance = listView.getChildAt(0).getHeight() * offset; // approx
+
+                     listView.smoothScrollBy(-distance, duration);
+                     listView.postDelayed(this, duration);
+                  }
+               }, 500);
+            } else {
+               // TODO new items indicator
+            }
          } else {
             listView.setSelectionFromTop(index, px);
          }

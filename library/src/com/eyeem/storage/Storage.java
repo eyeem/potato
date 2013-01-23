@@ -724,6 +724,13 @@ public abstract class Storage<T> {
          }
       }
 
+      public void commit(Subscription.Action action) {
+         if (transaction != null) {
+            transaction.ids = ids;
+            transaction.subscribers.updateAll(action);
+         }
+      }
+
       /**
        * Last item's id.
        * @return
@@ -790,7 +797,8 @@ public abstract class Storage<T> {
       private ArrayList<Subscription> subscriptions = new ArrayList<Subscription>();
 
       public void addSubscriber(Subscription subscription) {
-         subscriptions.add(subscription);
+         if (!subscriptions.contains(subscription))
+            subscriptions.add(subscription);
       }
 
       public void removeSubscriber(Subscription subscription) {
