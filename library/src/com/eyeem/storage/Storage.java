@@ -164,6 +164,15 @@ public abstract class Storage<T> {
       subscribers.get(id).removeAllSubscribers();
    }
 
+   /**
+    * Remove all subscriptions ever
+    */
+   public void unsubscribeAll() {
+      subscribers.clear();
+      for (List list : lists.values())
+         list.unsubscribeAll();
+   }
+
    private void addOrUpdate(String id, T object) {
       cache.put(id, object);
    }

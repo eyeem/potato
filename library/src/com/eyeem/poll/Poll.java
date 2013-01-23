@@ -317,12 +317,14 @@ public abstract class Poll<T> {
       protected void onSuccess(int result) {
          for (Listener listener : listeners)
             listener.onSuccess(result);
+         listeners.clear();
       }
 
       protected void onError(Throwable error) {
          if (DEBUG) Log.w(getClass().getSimpleName(), "onError", error);
          for (Listener listener : listeners)
             listener.onError(error);
+         listeners.clear();
       }
 
       @Override
