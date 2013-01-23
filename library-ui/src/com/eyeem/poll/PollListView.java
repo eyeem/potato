@@ -105,13 +105,6 @@ public class PollListView extends PullToRefreshListView {
     * Call in Activity's or Fragment's onPause
     */
    public void onPause() {
-      if (currentAdapter == dataAdapter && dataAdapter != null) {
-         ArrayList<View> viewsToClean = new ArrayList<View>();
-         getRefreshableView().reclaimViews(viewsToClean);
-         for (View view : viewsToClean) {
-            dataAdapter.recycleBitmaps(view);
-         }
-      }
       if (poll != null) {
          poll.list.unsubscribe(subscription);
          if (poll.okToSave()) {
