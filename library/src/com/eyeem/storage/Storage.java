@@ -122,11 +122,11 @@ public abstract class Storage<T> {
       String id = id(t);
       cache.put(id(t), t);
       if (subscribers.get(id) != null) {
-         subscribers.get(id).updateAll();
+         subscribers.get(id).updateAll(Subscription.PUSH);
       }
       for (List list : lists.values()) {
          if (list.ids.contains(id)) {
-            list.subscribers.updateAll();
+            list.subscribers.updateAll(Subscription.PUSH);
          }
       }
    }
@@ -162,6 +162,15 @@ public abstract class Storage<T> {
       if (subscribers.get(id) == null)
          return;
       subscribers.get(id).removeAllSubscribers();
+   }
+
+   /**
+    * Remove all subscriptions ever
+    */
+   public void unsubscribeAll() {
+      subscribers.clear();
+      for (List list : lists.values())
+         list.unsubscribeAll();
    }
 
    private void addOrUpdate(String id, T object) {
@@ -383,7 +392,7 @@ public abstract class Storage<T> {
          if ((!dedupe) || (dedupe && !ids.contains(id)))
             ids.add(id);
          sort();
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.ADD);
          return true;
       }
 
@@ -394,7 +403,7 @@ public abstract class Storage<T> {
          if ((!dedupe) || (dedupe && !ids.contains(id)))
             ids.add(location, id);
          sort();
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.ADD);
       }
 
       @Override
@@ -405,7 +414,7 @@ public abstract class Storage<T> {
                ids.add(id(object));
          }
          sort();
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.ADD_ALL);
          return false;
       }
 
@@ -420,14 +429,30 @@ public abstract class Storage<T> {
          }
          boolean value = ids.addAll(location, collectionIds);
          sort();
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.ADD_ALL);
+         return value;
+      }
+
+      public boolean addUpFront(Collection<? extends T> collection, HashMap<String, Object> params) {
+         Subscription.Action action = new Subscription.Action(Subscription.ADD_UPFRONT);
+         action.params = params;
+         ArrayList<String> collectionIds = new ArrayList<String>();
+         for (Object t : collection) {
+            String id = id((T)t);
+            if ((!dedupe) || (dedupe && !ids.contains(id)))
+               collectionIds.add(id);
+            addOrUpdate(id, (T)t);
+         }
+         boolean value = ids.addAll(0, collectionIds);
+         sort();
+         subscribers.updateAll(action);
          return value;
       }
 
       @Override
       public void clear() {
          ids.clear();
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.CLEAR);
       }
 
       @Override
@@ -480,7 +505,7 @@ public abstract class Storage<T> {
       public T remove(int location) {
          String id = ids.get(location);
          ids.remove(id);
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.REMOVE);
          return cache.get(id);
       }
 
@@ -488,7 +513,7 @@ public abstract class Storage<T> {
       public boolean remove(Object object) {
          boolean value = ids.remove(id((T) object));
          if (value)
-            subscribers.updateAll();
+            subscribers.updateAll(Subscription.REMOVE);
          return value;
       }
 
@@ -499,7 +524,7 @@ public abstract class Storage<T> {
             collectionIds.add(id((T)t));
          }
          boolean value = ids.removeAll(collectionIds);
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.REMOVE_ALL);
          return value;
       }
 
@@ -510,7 +535,7 @@ public abstract class Storage<T> {
             collectionIds.add(id((T)t));
          }
          boolean value = ids.retainAll(collectionIds);
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.RETAIN_ALL);
          return value;
       }
 
@@ -637,7 +662,7 @@ public abstract class Storage<T> {
          Vector<String> trimmed = new Vector<String>(size);
          trimmed.addAll(ids.subList(0, Math.min(ids.size(), size)));
          ids = trimmed;
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.TRIM);
       }
 
       /**
@@ -651,7 +676,7 @@ public abstract class Storage<T> {
          trimmed.addAll(ids.subList(Math.max(0, ids.size() - size), ids.size()));
          removedCount = ids.size() - trimmed.size();
          ids = trimmed;
-         subscribers.updateAll();
+         subscribers.updateAll(Subscription.TRIM_AT_END);
          return removedCount;
       }
 
@@ -704,7 +729,14 @@ public abstract class Storage<T> {
       public void commit() {
          if (transaction != null) {
             transaction.ids = ids;
-            transaction.subscribers.updateAll();
+            transaction.subscribers.updateAll(Subscription.COMMIT);
+         }
+      }
+
+      public void commit(Subscription.Action action) {
+         if (transaction != null) {
+            transaction.ids = ids;
+            transaction.subscribers.updateAll(action);
          }
       }
 
@@ -724,7 +756,7 @@ public abstract class Storage<T> {
          for (String id : ids) {
             if (cache.get(id) == null) {
                ids.clear();
-               subscribers.updateAll();
+               subscribers.updateAll(Subscription.CLEAR);
                return false;
             }
          }
@@ -774,7 +806,8 @@ public abstract class Storage<T> {
       private ArrayList<Subscription> subscriptions = new ArrayList<Subscription>();
 
       public void addSubscriber(Subscription subscription) {
-         subscriptions.add(subscription);
+         if (!subscriptions.contains(subscription))
+            subscriptions.add(subscription);
       }
 
       public void removeSubscriber(Subscription subscription) {
@@ -785,12 +818,16 @@ public abstract class Storage<T> {
          subscriptions.clear();
       }
 
-      public void updateAll() {
+      public void updateAll(String actionName) {
+         updateAll(new Subscription.Action(actionName));
+      }
+
+      public void updateAll(Subscription.Action action) {
          if (muted)
             return;
          for (Subscription s : (ArrayList<Subscription>)subscriptions.clone()) {
             if (s != null)
-               s.onUpdate();
+               s.onUpdate(action);
          }
       }
 
@@ -803,6 +840,27 @@ public abstract class Storage<T> {
     * and {@link List} items.
     */
    public interface Subscription {
-      public void onUpdate();
+      public final static String ADD = "add";
+      public final static String ADD_ALL = "addAll";
+      public final static String ADD_UPFRONT = "addUpFront";
+      public final static String CLEAR = "clear";
+      public final static String COMMIT = "commit";
+      public final static String PUSH = "push";
+      public final static String REMOVE = "remove";
+      public final static String REMOVE_ALL = "removeAll";
+      public final static String RETAIN_ALL = "retainAll";
+      public final static String TRIM = "trim";
+      public final static String TRIM_AT_END = "trimAtEnd";
+
+      public static class Action {
+         public String name;
+         public HashMap<String, Object> params;
+
+         public Action(String name) {
+            this.name = name;
+            params = new HashMap<String, Object>();
+         }
+      }
+      public void onUpdate(Action action);
    }
 }

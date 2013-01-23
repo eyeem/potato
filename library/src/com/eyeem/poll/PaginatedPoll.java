@@ -3,6 +3,7 @@ package com.eyeem.poll;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 
 import android.util.Log;
 
@@ -68,7 +69,11 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
          removedCount = 0;
       }
       transaction.addAll(0, newItems);
-      transaction.commit();
+      Storage.Subscription.Action action = new Storage.Subscription.Action(Storage.Subscription.ADD_UPFRONT);
+      HashMap<String, Object> params = new HashMap<String, Object>();
+      action.params.put("firstId", listener.getFirstVisibleId());
+      action.params.put("firstTop", listener.getFirstTop());
+      transaction.commit(action);
       return newCount;
    }
 
