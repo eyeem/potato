@@ -106,4 +106,9 @@ public class TweetArrayAdapter extends AnimatedPollAdapter {
    public int positionForId(String id) {
       return mTimeline.indexOfId(id);
    }
+
+   @Override
+   public void recycleBitmaps(View view) {
+      //To change body of implemented methods use File | Settings | File Templates.
+   }
 }
