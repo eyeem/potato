@@ -16,10 +16,13 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
             listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
             if (index == 1) {
                listView.postDelayed(new Runnable() {
+
+                  int counter = 0;
+
                   @Override
                   public void run() {
                      int offset = listView.getFirstVisiblePosition();
-                     if (offset == 0) {
+                     if (offset == 0 || counter == 1) {
                         listView.setSelection(0);
                         return;
                      }
@@ -30,6 +33,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
 
                      listView.smoothScrollBy(-distance, duration);
                      listView.postDelayed(this, duration);
+                     counter++;
                   }
                }, 500);
             } else {
