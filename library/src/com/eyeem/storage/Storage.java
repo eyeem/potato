@@ -796,6 +796,13 @@ public abstract class Storage<T> {
          else
             return null;
       }
+
+      /**
+       * @param action
+       */
+      public void publish(Subscription.Action action) {
+         subscribers.updateAll(action);
+      }
    }
 
    /**
@@ -859,6 +866,15 @@ public abstract class Storage<T> {
          public Action(String name) {
             this.name = name;
             params = new HashMap<String, Object>();
+         }
+
+         public Action param(String key, Object value) {
+            params.put(key, value);
+            return this;
+         }
+
+         public Object param(String key) {
+            return  params.get(key);
          }
       }
       public void onUpdate(Action action);
