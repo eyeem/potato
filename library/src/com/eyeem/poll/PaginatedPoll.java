@@ -70,9 +70,8 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       }
       transaction.addAll(0, newItems);
       Storage.Subscription.Action action = new Storage.Subscription.Action(Storage.Subscription.ADD_UPFRONT);
-      HashMap<String, Object> params = new HashMap<String, Object>();
-      action.params.put("firstId", listener.getFirstVisibleId());
-      action.params.put("firstTop", listener.getFirstTop());
+      action.param("firstId", listener.getFirstVisibleId());
+      action.param("firstTop", listener.getFirstTop());
       transaction.commit(action);
       return newCount;
    }
