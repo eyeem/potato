@@ -40,7 +40,7 @@ public class PollListView extends PullToRefreshListView {
    PollAdapter onErrorAdapter;
    PollAdapter currentAdapter;
    View hackingEmptyView;
-   Runnable customRefreshRunnable;
+   ArrayList<Runnable> customRefreshRunnables = new ArrayList<Runnable>();
 
    /**
     * Problems text displayed in pull to refresh header
@@ -86,8 +86,9 @@ public class PollListView extends PullToRefreshListView {
     *
     * @param refreshRunnable
     */
-   public void setCustomRefreshRunnable(Runnable refreshRunnable) {
-      this.customRefreshRunnable = refreshRunnable;
+   public void addCustomRefreshRunnable(Runnable refreshRunnable) {
+      if (!customRefreshRunnables.contains(refreshRunnable))
+         customRefreshRunnables.add(refreshRunnable);
    }
 
    /**
@@ -195,8 +196,8 @@ public class PollListView extends PullToRefreshListView {
       public void onRefresh(PullToRefreshBase<ListView> refreshView) {
          if (poll != null) {
             poll.update(updateListener);
-            if (customRefreshRunnable != null)
-               customRefreshRunnable.run();
+            for (Runnable r : customRefreshRunnables)
+               r.run();
          }
       }
 
