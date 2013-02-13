@@ -11,13 +11,11 @@ import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView.FixedViewInfo;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
 
 import com.emilsjolander.components.StickyListHeaders.StickyListHeadersAdapter;
 import com.emilsjolander.components.StickyListHeaders.StickyListHeadersListView;
 import com.eyeem.lib.ui.R;
-import com.eyeem.poll.Poll;
 import com.eyeem.storage.Storage.Subscription;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
@@ -128,7 +126,7 @@ public class PollListView extends PullToRefreshListView {
             poll.resetLastTimeUpdated();
             poll.list.load();
          }
-         poll.updateIfNecessary(updateListener);
+         poll.updateIfNecessary(fetchListener);
       }
       if (dataAdapter != null && pickAdapter() == dataAdapter) {
          if (currentAdapter != dataAdapter)
