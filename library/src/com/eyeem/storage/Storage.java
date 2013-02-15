@@ -368,7 +368,10 @@ public abstract class Storage<T> {
          Kryo kyro = new Kryo();
          try {
             Input input = new Input(new FileInputStream(filename()));
-            ArrayList<T> list = kyro.readObject(input, ArrayList.class);
+            HashMap<String, Object> data = new HashMap<String, Object>();
+            data = kyro.readObject(input, HashMap.class);
+            ArrayList<T> list = (ArrayList<T>)data.get("list");
+            meta = data.get("meta");
             input.close();
             addAll(list);
             return true;
@@ -403,8 +406,11 @@ public abstract class Storage<T> {
             dir.mkdirs();
             Kryo kyro = new Kryo();
             Output output;
+            HashMap<String, Object> data = new HashMap<String, Object>();
+            data.put("list", toArrayList(trimSize));
+            data.put("meta", meta);
             output = new Output(new FileOutputStream(filename()));
-            kyro.writeObject(output, toArrayList(trimSize));
+            kyro.writeObject(output, data);
             output.close();
             return true;
          } catch (Throwable e) {
@@ -536,7 +542,7 @@ public abstract class Storage<T> {
 
       @Override
       public int lastIndexOf(Object object) {
-         return ids.lastIndexOf(id((T)object));
+         return ids.lastIndexOf(id((T) object));
       }
 
       @Override
