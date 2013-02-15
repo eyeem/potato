@@ -278,7 +278,7 @@ public abstract class Storage<T> {
       private String name;
       protected int trimSize;
       protected List transaction;
-      protected Object meta;
+      protected HashMap<String, Object> meta;
 
       private List(String name) {
          ids = new Vector<String>();
@@ -287,13 +287,18 @@ public abstract class Storage<T> {
          trimSize = 30;
       }
 
-      public List setMeta(Object meta) {
-         this.meta = meta;
+      public List setMeta(String key, Object value) {
+         if (meta == null) {
+            meta = new HashMap<String, Object>();
+         }
+         meta.put(key, value);
          return this;
       }
 
-      public Object getMeta() {
-         return meta;
+      public Object getMeta(String key) {
+         if (meta == null)
+            return null;
+         return meta.get(key);
       }
 
       /**
@@ -371,9 +376,11 @@ public abstract class Storage<T> {
             HashMap<String, Object> data = new HashMap<String, Object>();
             data = kyro.readObject(input, HashMap.class);
             ArrayList<T> list = (ArrayList<T>)data.get("list");
-            meta = data.get("meta");
+            meta = (HashMap<String, Object>)data.get("meta");
             input.close();
-            addAll(list);
+            Storage<T>.List transaction = transaction();
+            transaction.addAll(list);
+            transaction.commit(new Subscription.Action(Subscription.LOADED));
             return true;
             // FIXME don't add objects that already exist in cache as they're most likely fresher
          } catch (Throwable e) {
@@ -927,6 +934,7 @@ public abstract class Storage<T> {
       public final static String RETAIN_ALL = "retainAll";
       public final static String TRIM = "trim";
       public final static String TRIM_AT_END = "trimAtEnd";
+      public final static String LOADED = "loaded";
 
       public static class Action {
          public String name;
