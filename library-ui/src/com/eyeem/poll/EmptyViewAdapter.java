@@ -8,6 +8,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import com.eyeem.storage.Storage;
 
+import java.util.HashSet;
+
 /**
  * One view custom adapter
  */
@@ -50,5 +52,10 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
 
    @Override
    public void recycleBitmaps(View view) {
+   }
+
+   @Override
+   public HashSet<String> seenIds() {
+      return new HashSet<String>();
    }
 }

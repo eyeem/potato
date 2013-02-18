@@ -4,7 +4,12 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import com.eyeem.storage.Storage;
 
+import java.util.HashSet;
+
 public abstract class AnimatedPollAdapter extends BaseAdapter implements PollListView.PollAdapter {
+
+   public HashSet<String> seenIds = new HashSet<String>();
+
    @Override
    public void notifyDataWithAction(Storage.Subscription.Action action, final ListView listView) {
       if (Storage.Subscription.ADD_UPFRONT.equals(action.name)) {
@@ -55,5 +60,10 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
    @Override
    public long getItemId(int position) {
       return position;
+   }
+
+   @Override
+   public HashSet<String> seenIds() {
+      return seenIds;
    }
 }

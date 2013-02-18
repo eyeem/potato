@@ -318,6 +318,10 @@ public abstract class Poll<T> {
          for (Listener listener : listeners)
             listener.onSuccess(result);
          listeners.clear();
+         if (this == fetchingMore)
+            fetchingMore = null;
+         if (this == updating)
+            updating = null;
       }
 
       protected void onError(Throwable error) {
@@ -325,6 +329,10 @@ public abstract class Poll<T> {
          for (Listener listener : listeners)
             listener.onError(error);
          listeners.clear();
+         if (this == fetchingMore)
+            fetchingMore = null;
+         if (this == updating)
+            updating = null;
       }
 
       @Override
