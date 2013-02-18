@@ -2,6 +2,7 @@ package com.eyeem.poll;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -39,6 +40,9 @@ public class PollListView extends PullToRefreshListView {
    PollAdapter currentAdapter;
    View hackingEmptyView;
    ArrayList<Runnable> customRefreshRunnables = new ArrayList<Runnable>();
+
+   String scrollPositionId;
+   String topSeenId;
 
    /**
     * Problems text displayed in pull to refresh header
@@ -105,6 +109,19 @@ public class PollListView extends PullToRefreshListView {
     */
    public void onPause() {
       if (poll != null) {
+         int position = getRefreshableView().getFirstVisiblePosition() - getRefreshableView().getHeaderViewsCount();
+         position = Math.max(position, 0);
+         if (poll.list.size() > 0 && dataAdapter != null) {
+            scrollPositionId = dataAdapter.idForPosition(position);
+         }
+         topSeenId = null;
+         for (int i = 0; i < poll.list.size() && topSeenId == null; i++) {
+            String id = poll.list.idForPosition(i);
+            if (dataAdapter.seenIds().contains(id))
+               topSeenId = id;
+         }
+         poll.list.setMeta("scrollPositionId", scrollPositionId);
+         poll.list.setMeta("topSeenId", topSeenId);
          poll.list.unsubscribe(subscription);
          if (poll.okToSave()) {
             poll.list.save();
@@ -447,6 +464,8 @@ public class PollListView extends PullToRefreshListView {
        * @return
        */
       public int positionForId(String id);
+
+      public HashSet<String> seenIds();
    }
 
    /**
