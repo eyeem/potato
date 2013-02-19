@@ -178,8 +178,10 @@ public class PollListView extends PullToRefreshListView {
     * @param adapter
     */
    public void setDataAdapter(PollAdapter adapter) {
-      dataAdapter = adapter;
-      reloadAdapters(null);
+      if (adapter != dataAdapter) {
+         dataAdapter = adapter;
+         reloadAdapters(null);
+      }
    }
 
    private PollAdapter pickAdapter() {
@@ -256,55 +258,7 @@ public class PollListView extends PullToRefreshListView {
       }
    };
 
-   private abstract class PollListener implements Poll.Listener {
-      @Override
-      public String getLastVisibleId() {
-         try {
-            // int i = getRefreshableView().getFirstVisiblePosition();
-            int i = Math.min(poll.getStorage().size() - 1, getRefreshableView().getLastVisiblePosition() - getRefreshableView().getHeaderViewsCount());
-            return dataAdapter.idForPosition(i);
-         } catch (Throwable t) {
-            return null;
-         }
-      }
-
-
-      @Override
-      public String getFirstVisibleId() {
-         try {
-            int i = Math.max(0, getRefreshableView().getFirstVisiblePosition());
-            return dataAdapter.idForPosition(i);
-         } catch (Throwable t) {
-            return null;
-         }
-      }
-
-      public int getFirstTop() {
-         if (getRefreshableView().getChildCount() > 0) {
-            return getRefreshableView().getChildAt(0).getTop();
-         } else {
-            return 0;
-         }
-      }
-
-      @Override
-      public void onTrim(final String currentId) {
-         post(new Runnable() {
-            @Override
-            public void run() {
-               int index = -1;
-               index = dataAdapter.positionForId(currentId);
-               // index += getRefreshableView().getHeaderViewsCount();
-               if (index >= 0)
-                  getRefreshableView().setSelection(index);
-            }
-         });
-      }
-   }
-
-   ;
-
-   private Poll.Listener fetchListener = new PollListener() {
+   private Poll.Listener fetchListener = new Poll.Listener() {
 
       @Override
       public void onStart() {
@@ -341,7 +295,7 @@ public class PollListView extends PullToRefreshListView {
       }
    };
 
-   private Poll.Listener updateListener = new PollListener() {
+   private Poll.Listener updateListener = new Poll.Listener() {
 
       @Override
       public void onError(Throwable error) {
@@ -400,7 +354,10 @@ public class PollListView extends PullToRefreshListView {
       if (action == null) {
          newAdapter.notifyDataSetChanged();
       } else {
-         newAdapter.notifyDataWithAction(action, getRefreshableView());
+         if (action.name.equals(Subscription.WILL_CHANGE))
+            newAdapter.notifyDataWillChange(getRefreshableView());
+         else
+            newAdapter.notifyDataWithAction(action, getRefreshableView());
       }
    }
 
@@ -436,6 +393,8 @@ public class PollListView extends PullToRefreshListView {
 
       public void notifyDataSetChanged();
 
+      public void notifyDataWillChange(ListView listView);
+
       public void notifyDataWithAction(Subscription.Action action, ListView listView);
 
       /**
@@ -446,8 +405,6 @@ public class PollListView extends PullToRefreshListView {
        * @param lv
        */
       public void refreshViews(ListView lv);
-
-      public void recycleBitmaps(View view);
 
       /**
        * Returns id for the given scroll position
