@@ -355,7 +355,7 @@ public class PollListView extends PullToRefreshListView {
          newAdapter.notifyDataSetChanged();
       } else {
          if (action.name.equals(Subscription.WILL_CHANGE))
-            newAdapter.notifyDataWillChange(getRefreshableView());
+            return;
          else
             newAdapter.notifyDataWithAction(action, getRefreshableView());
       }
@@ -364,6 +364,11 @@ public class PollListView extends PullToRefreshListView {
    Subscription subscription = new Subscription() {
       @Override
       public void onUpdate(final Action action) {
+         if (action.name.equals(Subscription.WILL_CHANGE)) {
+            if (dataAdapter != null)
+               dataAdapter.notifyDataWillChange(getRefreshableView());
+            return;
+         }
          post(new Runnable() {
             @Override
             public void run() {
