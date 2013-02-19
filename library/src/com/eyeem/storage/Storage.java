@@ -935,6 +935,7 @@ public abstract class Storage<T> {
       public final static String TRIM = "trim";
       public final static String TRIM_AT_END = "trimAtEnd";
       public final static String LOADED = "loaded";
+      public final static String WILL_CHANGE = "willChange";
 
       public static class Action {
          public String name;

@@ -23,15 +23,9 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
     */
    protected int limit;
 
-   /**
-    * Number of items in the gap.
-    */
-   protected int removedCount;
-
    public PaginatedPoll() {
       refreshPeriod = 5*60*1000; // 5 minutes
       limit = 30;
-      removedCount = 0;
    }
 
    @Override
@@ -43,35 +37,16 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
       }
 
       if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "update, newCount = " + newCount);
-      boolean removeGap = false;
-      if (!list.isEmpty()) {
-         String currentId = listener.getFirstVisibleId();
-         Storage<T> s = list.getStorage();
-         T firstItem = list.get(0);
-         if (currentId.equals(s.id(firstItem))) {
-            // clear stuff on pull to refresh
-            removeGap = true;
-         } else if (removedCount > 0) {
-            // MIND THE GAP if we're down the list
-            for (T item : newItems) {
-               if (currentId.equals(s.id(item))) {
-                  removeGap = true;
-                  break;
-               }
-            }
-         }
-      }
+      list.publish(new Storage.Subscription.Action(Storage.Subscription.WILL_CHANGE));
       Storage<T>.List transaction = list.transaction();
-      if (removeGap) {
-         if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "removing gap");
-         transaction.clear();
-         exhausted = false;
-         removedCount = 0;
-      }
+      //if (removeGap) {
+      //   if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "removing gap");
+      //   transaction.clear();
+      //   exhausted = false;
+      //   removedCount = 0;
+      //}
       transaction.addAll(0, newItems);
       Storage.Subscription.Action action = new Storage.Subscription.Action(Storage.Subscription.ADD_UPFRONT);
-      action.param("firstId", listener.getFirstVisibleId());
-      action.param("firstTop", listener.getFirstTop());
       transaction.commit(action);
       return newCount;
    }
@@ -85,21 +60,23 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
          if (list.contains(item))
             count--;
       }
-      if (count > 0 && count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
+      /*if (count > 0 && count + list.getStorage().currentSize() > list.getStorage().maxSize()) {
          if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Hitting storage capacity, trimming list.");
          String idBefore = listener.getLastVisibleId();
          Storage.List transaction = list.transaction();
          removedCount += transaction.makeGap(limit) + limit; // FIXME why +limit
          int removedCount = transaction.getStorage().retainList((List) transaction);
          if (Poll.DEBUG) Log.w(getClass().getSimpleName(), "Freed "+removedCount+" elements from storage.");
+         list.publish(new Storage.Subscription.Action(Storage.Subscription.WILL_CHANGE));
          transaction.addAll(oldItems);
          transaction.commit();
          listener.onTrim(idBefore);
-      } else {
+      } else {*/
+         list.publish(new Storage.Subscription.Action(Storage.Subscription.WILL_CHANGE));
          list.addAll(oldItems);
          if (count == 0)
             exhausted = true;
-      }
+      //}
       return count;
    }
 
@@ -123,7 +100,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
     * @return pagination offset
     */
    public int offset() {
-      return removedCount + Math.max(list.size(), limit);
+      return Math.max(list.size(), limit);
    }
 
    @Override

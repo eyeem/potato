@@ -51,11 +51,10 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    }
 
    @Override
-   public void recycleBitmaps(View view) {
-   }
-
-   @Override
    public HashSet<String> seenIds() {
       return new HashSet<String>();
    }
+
+   @Override
+   public void notifyDataWillChange(ListView listView) {}
 }
