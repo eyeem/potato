@@ -262,28 +262,6 @@ public abstract class Poll<T> {
        * Poll has exhausted.
        */
       public void onExhausted();
-
-      /**
-       * Facility to tell Poll about currently last visible
-       * id.
-       * @return
-       */
-      public String getLastVisibleId();
-
-      /**
-       * Facility to tell Poll about currently first visible
-       * id.
-       * @return
-       */
-      public String getFirstVisibleId();
-
-      public int getFirstTop();
-
-      /**
-       * Trim action is about to happen
-       * @param currentId
-       */
-      public void onTrim(String currentId);
    }
 
    private abstract class RefreshTask extends AsyncTask<Void, Void, ArrayList<T>> {

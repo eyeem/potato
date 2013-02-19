@@ -10,13 +10,24 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
 
    public HashSet<String> seenIds = new HashSet<String>();
 
+   protected String firstId;
+   protected int offsetPy;
+
+   @Override
+   public void notifyDataWillChange(ListView listView) {
+      int i = Math.max(listView.getFirstVisiblePosition() - listView.getHeaderViewsCount(), 0);
+      firstId = idForPosition(i);
+      offsetPy = listView.getChildAt(0) == null ? 0 : listView.getChildAt(0).getTop();
+   }
+
    @Override
    public void notifyDataWithAction(Storage.Subscription.Action action, final ListView listView) {
       if (Storage.Subscription.ADD_UPFRONT.equals(action.name)) {
          boolean paused = isScrollingPaused(listView);
          notifyDataSetChanged();
-         int index = positionForId((String)action.params.get("firstId"));
-         final int px = (Integer)action.params.get("firstTop");
+         int index = positionForId(firstId);
+         firstId = null;
+         final int px = offsetPy;
          if (!paused && index > 0) {
             listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
             if (index == 1) {
@@ -50,6 +61,10 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
          }
       } else {
          notifyDataSetChanged();
+         if (firstId != null) {
+            listView.setSelectionFromTop(positionForId(firstId) + listView.getHeaderViewsCount(), offsetPy);
+            firstId = null;
+         }
       }
    }
 
