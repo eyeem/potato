@@ -212,7 +212,7 @@ public class PollListView extends PullToRefreshListView {
       @Override
       public void onRefresh(PullToRefreshBase<ListView> refreshView) {
          if (poll != null) {
-            poll.update(updateListener);
+            poll.update(updateListener, true);
             for (Runnable r : customRefreshRunnables)
                r.run();
          }
@@ -382,7 +382,7 @@ public class PollListView extends PullToRefreshListView {
     * Update/refresh content
     */
    public void update() {
-      poll.update(updateListener);
+      poll.update(updateListener, false);
    }
 
    public interface PollAdapter extends android.widget.ListAdapter, android.widget.SpinnerAdapter {
