@@ -57,7 +57,7 @@ public abstract class Poll<T> {
    protected boolean polling;
 
    /**
-    * Last time successful {@link #update(Listener)} occured.
+    * Last time successful {@link #update(Listener, boolean)} occured.
     * UNIX time ms.
     */
    protected long lastTimeUpdated;
@@ -90,9 +90,10 @@ public abstract class Poll<T> {
     * Appends new items to the {@link #list}
     * @param newItems
     * @param listener
+    * @param cleanUp
     * @return
     */
-   protected abstract int appendNewItems(ArrayList<T> newItems, Poll.Listener listener);
+   protected abstract int appendNewItems(ArrayList<T> newItems, Poll.Listener listener, boolean cleanUp);
 
    /**
     * Appends old items to the {@link #list}
@@ -135,15 +136,16 @@ public abstract class Poll<T> {
     */
    public void updateIfNecessary(Listener listener) {
       if (shouldUpdate())
-         update(listener);
+         update(listener, false);
    }
 
    /**
     * Updates poll always. Please consider using
     * {@link #updateIfNecessary(Listener)}
     * @param listener
+    * @param cleanUp
     */
-   public synchronized void update(final Listener listener) {
+   public synchronized void update(final Listener listener, final boolean cleanUp) {
       if (updating == null || updating.working == false) {
          updating = new RefreshTask() {
 
@@ -160,7 +162,7 @@ public abstract class Poll<T> {
 
             @Override
             public int itemsAction(ArrayList<T> result) throws Throwable {
-               return appendNewItems(result, listener);
+               return appendNewItems(result, listener, cleanUp);
             }
 
             @Override
