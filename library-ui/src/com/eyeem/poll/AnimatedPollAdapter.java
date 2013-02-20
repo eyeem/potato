@@ -3,6 +3,7 @@ package com.eyeem.poll;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import com.eyeem.storage.Storage;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
 import java.util.HashSet;
 
@@ -15,9 +16,19 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
 
    @Override
    public void notifyDataWillChange(ListView listView) {
-      int i = Math.max(listView.getFirstVisiblePosition() - listView.getHeaderViewsCount(), 0);
-      firstId = idForPosition(i);
-      offsetPy = listView.getChildAt(0) == null ? 0 : listView.getChildAt(0).getTop();
+      boolean pullToRefreshList = false;
+      try {
+         pullToRefreshList = listView.getParent().getParent() instanceof PullToRefreshListView;
+      } catch (Throwable t) {}
+      int i = listView.getFirstVisiblePosition() - listView.getHeaderViewsCount();
+      if (i >= 0 || (pullToRefreshList && i+1 >= 0)) {
+         // pull to refresh library adds a framelayout header by default so
+         // we need to compensate for that
+         firstId = idForPosition(i < 0 ? 0 : i);
+         offsetPy = listView.getChildAt(0) == null ? 0 : listView.getChildAt(0).getTop();
+      } else {
+         firstId = null;
+      }
    }
 
    @Override
