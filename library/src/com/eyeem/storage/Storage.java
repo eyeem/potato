@@ -853,7 +853,7 @@ public abstract class Storage<T> {
        * @return
        */
       public String idForPosition(int position) {
-         return ids.get(position);
+         return (position >=0 && position < ids.size()) ? ids.get(position) : null;
       }
 
       /**
