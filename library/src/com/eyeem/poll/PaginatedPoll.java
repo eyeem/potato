@@ -29,22 +29,21 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
    }
 
    @Override
-   protected int appendNewItems(ArrayList<T> newItems, Poll.Listener listener) {
+   protected int appendNewItems(ArrayList<T> newItems, Poll.Listener listener, boolean cleanUp) {
       int newCount = newItems.size();
       for (T item : newItems) {
          if (list.contains(item))
             newCount--;
       }
 
-      if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "update, newCount = " + newCount);
+      if (Poll.DEBUG)  Log.i(getClass().getSimpleName(), "update, newCount = " + newCount);
       list.publish(new Storage.Subscription.Action(Storage.Subscription.WILL_CHANGE));
       Storage<T>.List transaction = list.transaction();
-      //if (removeGap) {
-      //   if (Poll.DEBUG)  Log.w(getClass().getSimpleName(), "removing gap");
-      //   transaction.clear();
-      //   exhausted = false;
-      //   removedCount = 0;
-      //}
+      if (cleanUp) {
+         if (Poll.DEBUG)  Log.i(getClass().getSimpleName(), "cleanUp");
+         transaction.clear();
+         exhausted = false;
+      }
       transaction.addAll(0, newItems);
       Storage.Subscription.Action action = new Storage.Subscription.Action(Storage.Subscription.ADD_UPFRONT);
       transaction.commit(action);

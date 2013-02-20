@@ -2,6 +2,7 @@ package com.eyeem.storage;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -383,10 +384,12 @@ public abstract class Storage<T> {
             transaction.commit(new Subscription.Action(Subscription.LOADED));
             return true;
             // FIXME don't add objects that already exist in cache as they're most likely fresher
+         } catch (FileNotFoundException e) {
+            Log.w(classname().getSimpleName(), "load() error: file "+filename()+" missing");
          } catch (Throwable e) {
             Log.e(classname().getSimpleName(), "load() error", e);
-            return false;
          }
+         return false;
       }
 
       /**
