@@ -126,6 +126,7 @@ public class PollListView extends PullToRefreshListView {
          if (poll.okToSave()) {
             poll.list.save();
          }
+         poll.list.extOff();
       }
    }
 
@@ -139,6 +140,7 @@ public class PollListView extends PullToRefreshListView {
          poll.exhausted = false;
 
          poll.list.subscribe(subscription);
+         poll.list.extOn();
          if (!poll.list.ensureConsistence() || poll.list.isEmpty()) {
             poll.resetLastTimeUpdated();
             poll.list.load();

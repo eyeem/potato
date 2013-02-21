@@ -140,12 +140,15 @@ public abstract class Storage<T> {
     */
    public void push(T t) {
       String id = id(t);
-      cache.put(id(t), t);
+      cache.put(id, t);
       if (subscribers.get(id) != null) {
          subscribers.get(id).updateAll(Subscription.PUSH);
       }
       for (List list : lists.values()) {
          if (list.ids.contains(id)) {
+            if (list.ext != null) {
+               list.ext.put(id, t);
+            }
             list.subscribers.updateAll(Subscription.PUSH);
          }
       }
@@ -280,6 +283,7 @@ public abstract class Storage<T> {
       protected int trimSize;
       protected List transaction;
       protected HashMap<String, Object> meta;
+      protected HashMap<String, T> ext;
 
       private List(String name) {
          ids = new Vector<String>();
@@ -302,6 +306,28 @@ public abstract class Storage<T> {
          return meta.get(key);
       }
 
+      public void extOn() {
+         if (ext == null) {
+            ext = new HashMap<String, T>();
+         }
+      }
+
+      public void extOff() {
+         if (ext != null) {
+            Vector<String> newIds = new Vector<String>();
+            for (int i=0; i < ids.size() && i < trimSize; i++) {
+               String id = ids.get(i);
+               newIds.add(id);
+               T t = ext.get(id);
+               if (id != null && t != null)
+                  cache.put(id, t);
+            }
+            ids = newIds;
+            ext.clear();
+            ext = null;
+         }
+      }
+
       /**
        * Transaction constructor
        * @param list
@@ -315,6 +341,7 @@ public abstract class Storage<T> {
          this.comparator = list.comparator;
          trimSize = list.trimSize;
          transaction = list;
+         ext = list.ext;
          mute();
       }
 
@@ -429,6 +456,21 @@ public abstract class Storage<T> {
          }
       }
 
+      private T get(String id) {
+         if (ext != null && ext.containsKey(id)) {
+            return ext.get(id);
+         }
+         return cache.get(id);
+      }
+
+      private void addOrUpdate(String id, T object) {
+         if (ext != null) {
+            ext.put(id, object);
+         }
+         if (indexOfId(id) < trimSize || Storage.this.contains(id))
+            Storage.this.addOrUpdate(id, object);
+      }
+
       @Override
       public Iterator<T> iterator() {
          final Iterator<String> i = ids.iterator();
@@ -441,7 +483,7 @@ public abstract class Storage<T> {
 
             @Override
             public T next() {
-               return cache.get(i.next());
+               return get(i.next());
             }
 
             @Override
@@ -518,6 +560,9 @@ public abstract class Storage<T> {
       @Override
       public void clear() {
          ids.clear();
+         if (ext != null) {
+            ext.clear();
+         }
          subscribers.updateAll(Subscription.CLEAR);
       }
 
@@ -537,7 +582,7 @@ public abstract class Storage<T> {
 
       @Override
       public T get(int location) {
-         return cache.get(ids.get(location));
+         return get(ids.get(location));
       }
 
       @Override
@@ -571,6 +616,9 @@ public abstract class Storage<T> {
       public T remove(int location) {
          String id = ids.get(location);
          ids.remove(id);
+         if (ext != null) {
+            ext.remove(id);
+         }
          subscribers.updateAll(Subscription.REMOVE);
          return cache.get(id);
       }
@@ -642,7 +690,7 @@ public abstract class Storage<T> {
       public ArrayList<T> toArrayList(int count) {
          ArrayList<T> list = new ArrayList<T>();
          for (String id : ids) {
-            T object = cache.get(id);
+            T object = get(id);
             if (object != null) {
                list.add(object);
                count--;
@@ -658,7 +706,7 @@ public abstract class Storage<T> {
          T[] array = (T[])Array.newInstance(classname(), ids.size());
          int index  = 0;
          for (String id : ids) {
-            T t = cache.get(id);
+            T t = get(id);
             if (t != null) {
                array[index++] = t;
             }
@@ -679,7 +727,7 @@ public abstract class Storage<T> {
          }
          int index  = 0;
          for (String id : ids) {
-            T t = (T) cache.get(id);
+            T t = (T) get(id);
             if (t != null) {
                array[index++] = t;
             }
@@ -726,8 +774,8 @@ public abstract class Storage<T> {
          Collections.sort(ids, new Comparator<String>() {
             @Override
             public int compare(String lhs, String rhs) {
-               T tLhs = cache.get(lhs);
-               T tRhs = cache.get(rhs);
+               T tLhs = get(lhs);
+               T tRhs = get(rhs);
                return comparator.compare(tLhs, tRhs);
             }
          });
@@ -833,7 +881,7 @@ public abstract class Storage<T> {
        */
       public boolean ensureConsistence() {
          for (String id : ids) {
-            if (cache.get(id) == null) {
+            if (get(id) == null) {
                ids.clear();
                subscribers.updateAll(Subscription.CLEAR);
                return false;
@@ -871,7 +919,7 @@ public abstract class Storage<T> {
        */
       public T getById(String id) {
          if (ids.contains(id))
-            return storage.get(id);
+            return get(id);
          else
             return null;
       }
