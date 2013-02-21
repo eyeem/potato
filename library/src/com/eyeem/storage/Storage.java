@@ -328,6 +328,10 @@ public abstract class Storage<T> {
          }
       }
 
+      public Vector<String> ids() {
+         return (Vector<String>)ids.clone();
+      }
+
       /**
        * Transaction constructor
        * @param list
