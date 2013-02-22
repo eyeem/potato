@@ -106,4 +106,5 @@ public class TweetArrayAdapter extends AnimatedPollAdapter {
    public int positionForId(String id) {
       return mTimeline.indexOfId(id);
    }
+
 }

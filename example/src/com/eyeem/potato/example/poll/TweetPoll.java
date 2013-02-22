@@ -7,6 +7,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 
+import android.util.Log;
 import com.eyeem.poll.Poll;
 import com.eyeem.potato.example.R;
 import com.eyeem.potato.example.model.Tweet;
@@ -14,6 +15,7 @@ import com.eyeem.potato.example.rest.RESTClient;
 import com.eyeem.potato.example.rest.RESTClient.HTTPVerb;
 import com.eyeem.potato.example.rest.TweetCallback;
 import com.eyeem.potato.example.storage.TweetStorage;
+import com.eyeem.storage.Storage;
 
 public class TweetPoll extends Poll<Tweet> {
 
@@ -21,11 +23,11 @@ public class TweetPoll extends Poll<Tweet> {
    private String lastElementId = null;
    private String userName = null;
 
-   private Uri timelineUri = Uri.parse("http://api.twitter.com/1/statuses/user_timeline.json");
    private RESTClient restClient;
    private TweetCallback mCallback;
 
    public TweetPoll(Context ctx, String userName) {
+      Uri timelineUri = Uri.parse("http://api.twitter.com/1/statuses/user_timeline.json");
       restClient = new RESTClient(HTTPVerb.GET, timelineUri);
       setStorage(TweetStorage.getInstance().obtainList(userName));
       this.userName = userName;
@@ -57,19 +59,23 @@ public class TweetPoll extends Poll<Tweet> {
    }
 
    @Override
-   protected int appendNewItems(ArrayList<Tweet> newItems, Listener listener) {
+   protected int appendNewItems(ArrayList<Tweet> newItems, Listener listener, boolean cleanUp) {
       int newCount = newItems.size();
       for (Tweet item : newItems) {
          if (list.contains(item))
             newCount--;
       }
-      if (newItems.size() > 0)
-         firstElementId = newItems.get(0).getId();
-
-      HashMap<String, Object> params = new HashMap<String, Object>();
-      params.put("firstId", listener.getFirstVisibleId());
-      params.put("firstTop", listener.getFirstTop());
-      list.addUpFront(newItems, params);
+      if (Poll.DEBUG)  Log.i(getClass().getSimpleName(), "update, newCount = " + newCount);
+      list.publish(new Storage.Subscription.Action(Storage.Subscription.WILL_CHANGE));
+      Storage<Tweet>.List transaction = list.transaction();
+      if (cleanUp) {
+         if (Poll.DEBUG)  Log.i(getClass().getSimpleName(), "cleanUp");
+         transaction.clear();
+         exhausted = false;
+      }
+      transaction.addAll(0, newItems);
+      Storage.Subscription.Action action = new Storage.Subscription.Action(Storage.Subscription.ADD_UPFRONT);
+      transaction.commit(action);
       return newCount;
    }
 
