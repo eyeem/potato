@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +48,7 @@ import com.esotericsoftware.kryo.io.Output;
 public abstract class Storage<T> {
 
    LruCache<String, T> cache;
-   HashMap<String, List> lists;
+   HashMap<String, WeakReference<List>> lists;
    HashMap<String, Subscribers> subscribers;
    Context context;
    Storage<T> storage;
@@ -64,7 +65,7 @@ public abstract class Storage<T> {
     */
    public void init(int size) {
       cache = new LruCache<String, T>(this.size = size);
-      lists = new HashMap<String, List>();
+      lists = new HashMap<String, WeakReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
       storage = this;
    }
@@ -73,8 +74,12 @@ public abstract class Storage<T> {
     * Removes all items and lists from storage
     */
    public void clearAll() {
-      for (List list : lists.values())
-         list.clear();
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null) {
+            list.clear();
+         }
+      }
       cache.evictAll();
    }
 
@@ -82,8 +87,12 @@ public abstract class Storage<T> {
     * Saves all lists
     */
    public void saveAll() {
-      for (List list : lists.values())
-         list.save();
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null) {
+            list.clear();
+         }
+      }
    }
 
    /**
@@ -91,8 +100,9 @@ public abstract class Storage<T> {
     * @param selectedLists
     */
    public void save(java.util.List<String> selectedLists) {
-      for (List list : lists.values()) {
-         if (selectedLists.contains(list.name))
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null && selectedLists.contains(list.name))
             list.save();
       }
    }
@@ -105,11 +115,13 @@ public abstract class Storage<T> {
    public void delete(String id) {
       T toBeRemoved;
       if ((toBeRemoved = cache.remove(id)) != null) {
-         Set<Entry<String, List>> set = lists.entrySet();
-         Iterator<Entry<String, List>> it = set.iterator();
+         Set<Entry<String, WeakReference<List>>> set = lists.entrySet();
+         Iterator<Entry<String, WeakReference<List>>> it = set.iterator();
          while (it.hasNext()) {
-            Entry<String, List> entry = it.next();
-            entry.getValue().remove(toBeRemoved);
+            Entry<String, WeakReference<List>> entry = it.next();
+            List list = entry.getValue().get();
+            if (list != null)
+               list.remove(toBeRemoved);
          }
       }
       unsubscribeAll(id);
@@ -144,8 +156,9 @@ public abstract class Storage<T> {
       if (subscribers.get(id) != null) {
          subscribers.get(id).updateAll(Subscription.PUSH);
       }
-      for (List list : lists.values()) {
-         if (list.ids.contains(id)) {
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null && list.ids.contains(id)) {
             if (list.ext != null) {
                list.ext.put(id, t);
             }
@@ -192,8 +205,11 @@ public abstract class Storage<T> {
     */
    public void unsubscribeAll() {
       subscribers.clear();
-      for (List list : lists.values())
-         list.unsubscribeAll();
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null)
+            list.unsubscribeAll();
+      }
    }
 
    private void addOrUpdate(String id, T object) {
@@ -206,11 +222,19 @@ public abstract class Storage<T> {
     * @return
     */
    public List obtainList(String name) {
-      if (lists.get(name) == null) {
-         List list = new List(name);
-         lists.put(name, list);
+      WeakReference<List> _list = lists.get(name);
+      List list;
+      if (_list == null) {
+         list = new List(name);
+         lists.put(name, new WeakReference<List>(list));
+         return list;
       }
-      return lists.get(name);
+      list = _list.get();
+      if (list == null) {
+         list = new List(name);
+         lists.put(name, new WeakReference<List>(list));
+      }
+      return list;
    }
 
    /**
@@ -238,10 +262,13 @@ public abstract class Storage<T> {
             count += cache.remove(id) == null ? 0 : 1;
          }
       }
-      for (List otherList : lists.values()) {
-         if (otherList.name.equals(list.name))
-            continue;
-         otherList.ids.clear();
+      for (WeakReference<List> _otherList : lists.values()) {
+         List otherList = _otherList.get();
+         if (otherList != null) {
+            if (otherList.name.equals(list.name))
+               continue;
+            otherList.ids.clear();
+         }
       }
       return count;
    }
@@ -326,6 +353,10 @@ public abstract class Storage<T> {
             ext.clear();
             ext = null;
          }
+      }
+
+      public Vector<String> ids() {
+         return (Vector<String>)ids.clone();
       }
 
       /**

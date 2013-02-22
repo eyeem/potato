@@ -126,7 +126,6 @@ public class PollListView extends PullToRefreshListView {
          if (poll.okToSave()) {
             poll.list.save();
          }
-         poll.list.extOff();
       }
    }
 
@@ -151,6 +150,12 @@ public class PollListView extends PullToRefreshListView {
          if (currentAdapter != dataAdapter)
             setAdapter(dataAdapter);
          dataAdapter.notifyDataSetChanged();
+      }
+   }
+
+   public void onDestroy() {
+      if (poll != null && poll.list != null) {
+         poll.list.extOff();
       }
    }
 
