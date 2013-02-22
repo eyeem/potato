@@ -31,7 +31,7 @@ public class TimelineActivity extends Activity implements BusyIndicator {
       setContentView(R.layout.activity_timeline);
 
       String userName = null;
-      Intent intent = null;
+      Intent intent;
       if ((intent = getIntent()) != null && intent.hasExtra(EXTRA_USER_NAME)) {
          userName = intent.getExtras().getString(EXTRA_USER_NAME);
       } else {

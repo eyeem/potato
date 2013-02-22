@@ -54,9 +54,9 @@ public class ImageLoaderHelper {
 
    static {
       options = new DisplayImageOptions.Builder()
-         .cacheInMemory()
-         .cacheOnDisc()
-         //.fadeIn()
-         .build();
+              .cacheInMemory()
+              .cacheOnDisc()
+                      //.fadeIn()
+              .build();
    }
 }
