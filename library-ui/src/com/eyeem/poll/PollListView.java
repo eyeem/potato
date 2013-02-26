@@ -34,10 +34,10 @@ public class PollListView extends PullToRefreshListView {
 
    Poll poll;
    BusyIndicator indicator;
-   PollAdapter dataAdapter;
-   PollAdapter noContentAdapter;
-   PollAdapter onErrorAdapter;
-   PollAdapter currentAdapter;
+   protected PollAdapter dataAdapter;
+   protected PollAdapter noContentAdapter;
+   protected PollAdapter onErrorAdapter;
+   protected PollAdapter currentAdapter;
    View hackingEmptyView;
    ArrayList<Runnable> customRefreshRunnables = new ArrayList<Runnable>();
 
