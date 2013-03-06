@@ -146,6 +146,14 @@ public abstract class Storage<T> {
    }
 
    /**
+    * Gets all items
+    * @return
+    */
+   public Collection<T> getAll() {
+      return cache == null ? Collections.<T>emptyList() : cache.snapshot().values();
+   }
+
+   /**
     * Pushes an item to storage, notifies all relevant
     * item & lists subscribers.
     * @param t
