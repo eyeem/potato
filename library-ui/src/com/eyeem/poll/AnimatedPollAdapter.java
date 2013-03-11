@@ -28,6 +28,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
          offsetPy = listView.getChildAt(0) == null ? 0 : listView.getChildAt(0).getTop();
       } else {
          firstId = null;
+         offsetPy = 0;
       }
    }
 
