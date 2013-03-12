@@ -49,7 +49,7 @@ public abstract class Storage<T> {
 
    LruCache<String, T> cache;
    HashMap<String, WeakReference<List>> lists;
-   HashMap<String, Subscribers> subscribers;
+   protected HashMap<String, Subscribers> subscribers;
    Context context;
    Storage<T> storage;
 
@@ -160,7 +160,7 @@ public abstract class Storage<T> {
     */
    public void push(T t) {
       String id = id(t);
-      cache.put(id, t);
+      addOrUpdate(id, t);
       Subscription.Action push = new Subscription.Action(Subscription.PUSH).param("objectId",id);
       if (subscribers.get(id) != null) {
          subscribers.get(id).updateAll(push);
@@ -221,7 +221,7 @@ public abstract class Storage<T> {
       }
    }
 
-   private void addOrUpdate(String id, T object) {
+   protected void addOrUpdate(String id, T object) {
       cache.put(id, object);
    }
 
