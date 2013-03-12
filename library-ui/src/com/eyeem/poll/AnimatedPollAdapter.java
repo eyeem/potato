@@ -93,4 +93,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
    public HashSet<String> seenIds() {
       return seenIds;
    }
+
+   @Override
+   public void clearViewCache() {}
 }

@@ -153,8 +153,9 @@ public abstract class Storage<T> {
    public void push(T t) {
       String id = id(t);
       cache.put(id, t);
+      Subscription.Action push = new Subscription.Action(Subscription.PUSH).param("objectId",id);
       if (subscribers.get(id) != null) {
-         subscribers.get(id).updateAll(Subscription.PUSH);
+         subscribers.get(id).updateAll(push);
       }
       for (WeakReference<List> _list : lists.values()) {
          List list = _list.get();
@@ -162,7 +163,7 @@ public abstract class Storage<T> {
             if (list.ext != null) {
                list.ext.put(id, t);
             }
-            list.subscribers.updateAll(Subscription.PUSH);
+            list.subscribers.updateAll(push);
          }
       }
    }

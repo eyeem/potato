@@ -361,7 +361,7 @@ public class PollListView extends PullToRefreshListView {
       if (action == null) {
          newAdapter.notifyDataSetChanged();
       } else {
-         if (action.name.equals(Subscription.WILL_CHANGE))
+         if (action.name.equals(Subscription.WILL_CHANGE) || action.param("singleItemUpdate") != null)
             return;
          else
             newAdapter.notifyDataWithAction(action, getRefreshableView());
@@ -375,6 +375,24 @@ public class PollListView extends PullToRefreshListView {
             if (dataAdapter != null)
                dataAdapter.notifyDataWillChange(getRefreshableView());
             return;
+         } else if (action.name.equals(Subscription.PUSH)) {
+            String id = String.valueOf(action.param("objectId"));
+            int headerCount = getRefreshableView().getHeaderViewsCount();
+            int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
+            for(int i=start, j=getRefreshableView().getLastVisiblePosition() - headerCount;i<=j;i++)
+               if (poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
+                  final View view = getRefreshableView().getChildAt(i-start);
+                  final int finalPosition = i;
+                  action.param("singleItemUpdate",true);
+                  post(new Runnable() {
+                     @Override
+                     public void run() {
+                        dataAdapter.clearViewCache();
+                        dataAdapter.getView(finalPosition, view, getRefreshableView());
+                     }
+                  });
+                  break;
+               }
          }
          post(new Runnable() {
             @Override
@@ -430,11 +448,13 @@ public class PollListView extends PullToRefreshListView {
        * Returns position of the given id.
        *
        * @param id
-       * @return
+       * @return position for id, or -1 if datasource does not contain id.
        */
       public int positionForId(String id);
 
       public HashSet<String> seenIds();
+
+      public void clearViewCache();
    }
 
    /**
