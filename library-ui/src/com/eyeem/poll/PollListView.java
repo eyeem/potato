@@ -150,6 +150,7 @@ public class PollListView extends PullToRefreshListView {
          if (currentAdapter != dataAdapter)
             setAdapter(dataAdapter);
          dataAdapter.notifyDataSetChanged();
+         dataAdapter.clearViewCache();
       }
    }
 
