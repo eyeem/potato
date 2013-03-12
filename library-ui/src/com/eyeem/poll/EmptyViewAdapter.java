@@ -56,5 +56,8 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    }
 
    @Override
+   public void clearViewCache() {}
+
+   @Override
    public void notifyDataWillChange(ListView listView) {}
 }
