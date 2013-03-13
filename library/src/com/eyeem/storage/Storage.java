@@ -1043,7 +1043,7 @@ public abstract class Storage<T> {
          }
 
          public Object param(String key) {
-            return  params.get(key);
+            return (params == null) ? null : params.get(key);
          }
       }
       public void onUpdate(Action action);
