@@ -69,7 +69,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
                listView.setSelection(0);
             }
          } else {
-            listView.setSelectionFromTop(index, px);
+            listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
          }
       } else {
          notifyDataSetChanged();
