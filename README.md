@@ -103,6 +103,11 @@ class TimelineActivity extends Activity {
 
 ```
 
+Dependencies
+============
+
+To build the included example application you will need our forked [PullToRefresh library](https://github.com/eyeem/Android-PullToRefresh).
+
 Developed By
 ============
 
