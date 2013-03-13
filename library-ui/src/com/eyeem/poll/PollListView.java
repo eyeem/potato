@@ -376,7 +376,7 @@ public class PollListView extends PullToRefreshListView {
             int headerCount = getRefreshableView().getHeaderViewsCount();
             int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
             for(int i=start, j=getRefreshableView().getLastVisiblePosition() - headerCount;i<=j;i++)
-               if (poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
+               if (i >= 0 && poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
                   final View view = getRefreshableView().getChildAt(i-start);
                   final int finalPosition = i;
                   action.param("singleItemUpdate",true);
