@@ -69,7 +69,12 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
                listView.setSelection(0);
             }
          } else {
-            listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
+            if (!isScrollingPaused(listView)) {
+               // otherwise pull to refresh library starts to behave erratic
+               listView.setSelectionFromTop(index, px); // should prolly be 0, 0 args but I'm too afraid of implications
+            } else {
+               listView.setSelectionFromTop(index + listView.getHeaderViewsCount(), px);
+            }
          }
       } else {
          notifyDataSetChanged();
