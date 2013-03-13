@@ -14,8 +14,6 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView.FixedViewInfo;
 import android.widget.ListView;
 
-import com.emilsjolander.components.StickyListHeaders.StickyListHeadersAdapter;
-import com.emilsjolander.components.StickyListHeaders.StickyListHeadersListView;
 import com.eyeem.lib.ui.R;
 import com.eyeem.storage.Storage.Subscription;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
@@ -351,9 +349,6 @@ public class PollListView extends PullToRefreshListView {
       if (newAdapter == null)
          return;
       if (currentAdapter != newAdapter) {
-         if (getRefreshableView() instanceof StickyListHeadersListView) {
-            ((StickyListHeadersListView) getRefreshableView()).setAreHeadersSticky(newAdapter instanceof StickyListHeadersAdapter);
-         }
          getRefreshableView().setAdapter(currentAdapter = newAdapter);
       }
       if (newAdapter == noContentAdapter) {
