@@ -9,6 +9,7 @@ import android.content.res.TypedArray;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView.FixedViewInfo;
@@ -41,6 +42,7 @@ public class PollListView extends PullToRefreshListView {
 
    String scrollPositionId;
    String topSeenId;
+   View bottomView;
 
    /**
     * Problems text displayed in pull to refresh header
@@ -69,6 +71,12 @@ public class PollListView extends PullToRefreshListView {
       TypedArray arr = context.obtainStyledAttributes(attrs, R.styleable.PollListView);
       progressLabelId = arr.getResourceId(R.styleable.PollListView_progress_text, R.string.default_progress_label);
       problemsLabelId = arr.getResourceId(R.styleable.PollListView_problems_text, R.string.default_problems_label);
+      float bottomSpace = arr.getDimension(R.styleable.PollListView_bottom_space, 0);
+      if (bottomSpace > 0) {
+         bottomView = new View(getContext());
+         bottomView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)bottomSpace));
+         getRefreshableView().addFooterView(bottomView);
+      }
       arr.recycle();
    }
 
@@ -192,15 +200,42 @@ public class PollListView extends PullToRefreshListView {
 
    private PollAdapter pickAdapter() {
       if (poll == null) {
+         if (bottomView != null)
+            removeFooter();
          return noContentAdapter;
       }
 
       if (poll.getState() == Poll.STATE_ERROR) {
          return onErrorAdapter;
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
+         if (bottomView != null)
+            removeFooter();
          return noContentAdapter;
       }
+      if (bottomView != null)
+         addFooter();
+
       return dataAdapter;
+   }
+
+   private void addFooter() {
+      post(new Runnable() {
+         @Override
+         public void run() {
+            if (getRefreshableView().getFooterViewsCount() == 0)
+               getRefreshableView().addFooterView(bottomView);
+         }
+      });
+   }
+
+   private void removeFooter() {
+      post(new Runnable() {
+         @Override
+         public void run() {
+            if (getRefreshableView().getFooterViewsCount() > 0)
+               getRefreshableView().removeFooterView(bottomView);
+         }
+      });
    }
 
    private void messageWithDelay(String message) {
@@ -375,11 +410,11 @@ public class PollListView extends PullToRefreshListView {
             String id = String.valueOf(action.param("objectId"));
             int headerCount = getRefreshableView().getHeaderViewsCount();
             int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
-            for(int i=start, j=getRefreshableView().getLastVisiblePosition() - headerCount;i<=j;i++)
+            for (int i = start, j = getRefreshableView().getLastVisiblePosition() - headerCount; i <= j; i++)
                if (i >= 0 && poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
-                  final View view = getRefreshableView().getChildAt(i-start);
+                  final View view = getRefreshableView().getChildAt(i - start);
                   final int finalPosition = i;
-                  action.param("singleItemUpdate",true);
+                  action.param("singleItemUpdate", true);
                   post(new Runnable() {
                      @Override
                      public void run() {
