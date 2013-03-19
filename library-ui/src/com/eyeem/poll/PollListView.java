@@ -205,12 +205,7 @@ public class PollListView extends PullToRefreshListView {
    private PollAdapter pickAdapter() {
       if (poll == null) {
          if (hasPlaceholderFooter)
-            post(new Runnable() {
-               @Override
-               public void run() {
-                  placeHolderFooterView.setVisibility(View.GONE);
-               }
-            });
+            removeFooter();
          return noContentAdapter;
       }
 
