@@ -42,8 +42,7 @@ public class PollListView extends PullToRefreshListView {
 
    String scrollPositionId;
    String topSeenId;
-   boolean hasPlaceholderFooter;
-   View placeHolderFooterView;
+   View bottomView;
 
    /**
     * Problems text displayed in pull to refresh header
@@ -66,21 +65,18 @@ public class PollListView extends PullToRefreshListView {
    public PollListView(Context context, AttributeSet attrs) {
       super(context, attrs);
       loadAttributes(context, attrs);
-
-      placeHolderFooterView = new View(getContext());
-      placeHolderFooterView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) (getContext().getResources().getDisplayMetrics().density * 70)));
-      //thx to google we to call that before setAdapter to be able to add/remove header/footer afterwards
-      getRefreshableView().addFooterView(placeHolderFooterView);
-      if (!hasPlaceholderFooter) {
-         removeFooter();
-      }
    }
 
    private void loadAttributes(Context context, AttributeSet attrs) {
       TypedArray arr = context.obtainStyledAttributes(attrs, R.styleable.PollListView);
       progressLabelId = arr.getResourceId(R.styleable.PollListView_progress_text, R.string.default_progress_label);
       problemsLabelId = arr.getResourceId(R.styleable.PollListView_problems_text, R.string.default_problems_label);
-      hasPlaceholderFooter = arr.getBoolean(R.styleable.PollListView_add_placeholder_footer, false);
+      float bottomSpace = arr.getDimension(R.styleable.PollListView_bottom_space, 0);
+      if (bottomSpace > 0) {
+         bottomView = new View(getContext());
+         bottomView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)bottomSpace));
+         getRefreshableView().addFooterView(bottomView);
+      }
       arr.recycle();
    }
 
@@ -204,7 +200,7 @@ public class PollListView extends PullToRefreshListView {
 
    private PollAdapter pickAdapter() {
       if (poll == null) {
-         if (hasPlaceholderFooter)
+         if (bottomView != null)
             removeFooter();
          return noContentAdapter;
       }
@@ -212,11 +208,11 @@ public class PollListView extends PullToRefreshListView {
       if (poll.getState() == Poll.STATE_ERROR) {
          return onErrorAdapter;
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
-         if (hasPlaceholderFooter)
+         if (bottomView != null)
             removeFooter();
          return noContentAdapter;
       }
-      if (hasPlaceholderFooter)
+      if (bottomView != null)
          addFooter();
 
       return dataAdapter;
@@ -227,7 +223,7 @@ public class PollListView extends PullToRefreshListView {
          @Override
          public void run() {
             if (getRefreshableView().getFooterViewsCount() == 0)
-               getRefreshableView().addFooterView(placeHolderFooterView);
+               getRefreshableView().addFooterView(bottomView);
          }
       });
    }
@@ -236,7 +232,8 @@ public class PollListView extends PullToRefreshListView {
       post(new Runnable() {
          @Override
          public void run() {
-            getRefreshableView().removeFooterView(placeHolderFooterView);
+            if (getRefreshableView().getFooterViewsCount() > 0)
+               getRefreshableView().removeFooterView(bottomView);
          }
       });
    }
