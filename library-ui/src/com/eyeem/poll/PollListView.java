@@ -9,6 +9,7 @@ import android.content.res.TypedArray;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView.FixedViewInfo;
@@ -41,6 +42,8 @@ public class PollListView extends PullToRefreshListView {
 
    String scrollPositionId;
    String topSeenId;
+   boolean hasPlaceholderFooter;
+   View placeHolderFooterView;
 
    /**
     * Problems text displayed in pull to refresh header
@@ -63,12 +66,21 @@ public class PollListView extends PullToRefreshListView {
    public PollListView(Context context, AttributeSet attrs) {
       super(context, attrs);
       loadAttributes(context, attrs);
+
+      placeHolderFooterView = new View(getContext());
+      placeHolderFooterView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) (getContext().getResources().getDisplayMetrics().density * 70)));
+      //thx to google we to call that before setAdapter to be able to add/remove header/footer afterwards
+      getRefreshableView().addFooterView(placeHolderFooterView);
+      if (!hasPlaceholderFooter) {
+         removeFooter();
+      }
    }
 
    private void loadAttributes(Context context, AttributeSet attrs) {
       TypedArray arr = context.obtainStyledAttributes(attrs, R.styleable.PollListView);
       progressLabelId = arr.getResourceId(R.styleable.PollListView_progress_text, R.string.default_progress_label);
       problemsLabelId = arr.getResourceId(R.styleable.PollListView_problems_text, R.string.default_problems_label);
+      hasPlaceholderFooter = arr.getBoolean(R.styleable.PollListView_add_placeholder_footer, false);
       arr.recycle();
    }
 
@@ -192,15 +204,46 @@ public class PollListView extends PullToRefreshListView {
 
    private PollAdapter pickAdapter() {
       if (poll == null) {
+         if (hasPlaceholderFooter)
+            post(new Runnable() {
+               @Override
+               public void run() {
+                  placeHolderFooterView.setVisibility(View.GONE);
+               }
+            });
          return noContentAdapter;
       }
 
       if (poll.getState() == Poll.STATE_ERROR) {
          return onErrorAdapter;
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
+         if (hasPlaceholderFooter)
+            removeFooter();
          return noContentAdapter;
       }
+      if (hasPlaceholderFooter)
+         addFooter();
+
       return dataAdapter;
+   }
+
+   private void addFooter() {
+      post(new Runnable() {
+         @Override
+         public void run() {
+            if (getRefreshableView().getFooterViewsCount() == 0)
+               getRefreshableView().addFooterView(placeHolderFooterView);
+         }
+      });
+   }
+
+   private void removeFooter() {
+      post(new Runnable() {
+         @Override
+         public void run() {
+            getRefreshableView().removeFooterView(placeHolderFooterView);
+         }
+      });
    }
 
    private void messageWithDelay(String message) {
@@ -375,11 +418,11 @@ public class PollListView extends PullToRefreshListView {
             String id = String.valueOf(action.param("objectId"));
             int headerCount = getRefreshableView().getHeaderViewsCount();
             int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
-            for(int i=start, j=getRefreshableView().getLastVisiblePosition() - headerCount;i<=j;i++)
+            for (int i = start, j = getRefreshableView().getLastVisiblePosition() - headerCount; i <= j; i++)
                if (i >= 0 && poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
-                  final View view = getRefreshableView().getChildAt(i-start);
+                  final View view = getRefreshableView().getChildAt(i - start);
                   final int finalPosition = i;
-                  action.param("singleItemUpdate",true);
+                  action.param("singleItemUpdate", true);
                   post(new Runnable() {
                      @Override
                      public void run() {
