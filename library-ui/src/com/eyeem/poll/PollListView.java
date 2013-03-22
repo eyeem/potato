@@ -202,6 +202,7 @@ public class PollListView extends PullToRefreshListView {
       if (poll == null) {
          if (bottomView != null)
             removeFooter();
+         setMode(Mode.DISABLED);
          return noContentAdapter;
       }
 
@@ -210,11 +211,13 @@ public class PollListView extends PullToRefreshListView {
       } else if (poll.getState() == Poll.STATE_NO_CONTENT) {
          if (bottomView != null)
             removeFooter();
+         setMode(Mode.DISABLED);
          return noContentAdapter;
       }
       if (bottomView != null)
          addFooter();
 
+      setMode(Mode.PULL_DOWN_TO_REFRESH);
       return dataAdapter;
    }
 
