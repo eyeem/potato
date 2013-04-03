@@ -970,6 +970,31 @@ public abstract class Storage<T> {
       public void publish(Subscription.Action action) {
          subscribers.updateAll(action);
       }
+
+      private Query<T> query;
+
+      public List setQuery(Query<T> query) {
+         this.query = query;
+         return this;
+      }
+
+      public List reloadQuery() {
+         if (query == null)
+            return this;
+         Vector<String> newIds = new Vector<String>();
+         for (T t : getAll()) {
+            if (query.eval(t)) {
+               newIds.add(id(t));
+            }
+         }
+         sort();
+         subscribers.updateAll(Subscription.RELOAD_QUERY);
+         return this;
+      }
+   }
+
+   public interface Query<T> {
+      boolean eval(T t);
    }
 
    /**
@@ -1027,6 +1052,7 @@ public abstract class Storage<T> {
       public final static String TRIM_AT_END = "trimAtEnd";
       public final static String LOADED = "loaded";
       public final static String WILL_CHANGE = "willChange";
+      public final static String RELOAD_QUERY = "reloadQuery";
 
       public static class Action {
          public String name;
