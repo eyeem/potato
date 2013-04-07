@@ -328,6 +328,10 @@ public abstract class Storage<T> {
          trimSize = 30;
       }
 
+      public void setTrimSize(int trimSize) {
+         this.trimSize = trimSize;
+      }
+
       public List setMeta(String key, Object value) {
          if (meta == null) {
             meta = new HashMap<String, Object>();
@@ -456,6 +460,7 @@ public abstract class Storage<T> {
          } catch (Throwable e) {
             Log.e(classname().getSimpleName(), "load() error", e);
          }
+         publish(new Subscription.Action(Subscription.LOADED)); // prolly should be other thing
          return false;
       }
 
@@ -989,6 +994,15 @@ public abstract class Storage<T> {
          }
          sort();
          subscribers.updateAll(Subscription.RELOAD_QUERY);
+         return this;
+      }
+
+      public List filter(Query query) {
+         List list = this.transaction();
+         return list;
+      }
+
+      public List filterSelf(Query query) {
          return this;
       }
    }
