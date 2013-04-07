@@ -992,6 +992,7 @@ public abstract class Storage<T> {
                newIds.add(id(t));
             }
          }
+         this.ids = newIds;
          sort();
          subscribers.updateAll(Subscription.RELOAD_QUERY);
          return this;
