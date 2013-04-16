@@ -232,7 +232,7 @@ public class PollListView extends PullToRefreshListView {
       post(new Runnable() {
          @Override
          public void run() {
-            if (getRefreshableView().getFooterViewsCount() > 0)
+            if (getRefreshableView().getFooterViewsCount() > 0 && bottomView != null)
                getRefreshableView().removeFooterView(bottomView);
          }
       });
