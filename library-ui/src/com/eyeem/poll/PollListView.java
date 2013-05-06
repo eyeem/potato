@@ -105,9 +105,21 @@ public class PollListView extends PullToRefreshListView {
     * @param poll
     */
    public void setPoll(Poll poll) {
+      boolean pollChanged = false;
+      if (this.poll != null && this.poll != poll) {
+         this.poll.list.unsubscribe(subscription);
+         pollChanged = true;
+      }
       this.poll = poll;
+      if (pollChanged && poll != null && poll.list != null) {
+         poll.list.subscribe(subscription);
+      }
       setOnRefreshListener(refreshListener);
       getRefreshableView().setOnScrollListener(scrollListener);
+   }
+
+   public Poll getPoll() {
+      return this.poll;
    }
 
    /**
