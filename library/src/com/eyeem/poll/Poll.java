@@ -87,6 +87,13 @@ public abstract class Poll<T> {
    protected abstract ArrayList<T> oldItems() throws Throwable;
 
    /**
+    * Fetches all the items, used by syncWithRemote
+    * @return
+    * @throws Throwable
+    */
+   protected ArrayList<T> allItems() throws Throwable { throw new NoSuchMethodError("Method not implemented"); };
+
+   /**
     * Appends new items to the {@link #list}
     * @param newItems
     * @param listener
@@ -366,5 +373,35 @@ public abstract class Poll<T> {
     */
    public void resetLastTimeUpdated() {
       lastTimeUpdated = 0;
+   }
+
+   boolean syncOngoing;
+   public void syncWithRemote() {
+      if (syncOngoing)
+         return;
+      syncOngoing = true;
+      Thread t = new Thread(new Runnable() {
+         @Override
+         public void run() {
+            list.loadSync();
+            long lastSyncTime = list.getMeta("lastSyncTime") == null ? 0 : (Long)list.getMeta("lastSyncTime");
+            lastTimeUpdated = lastSyncTime;
+            if (System.currentTimeMillis() - refreshPeriod < lastSyncTime) {
+               syncOngoing = false;
+               return; // no sync needed
+            }
+            try {
+               Storage<T>.List transaction = list.transaction();
+               transaction.clear();
+               transaction.addAll(allItems());
+               transaction.commit();
+               list.setMeta("lastSyncTime", System.currentTimeMillis());
+               list.saveSync();
+            } catch (Throwable t) { /*syncFailed*/ }
+            syncOngoing = false;
+         }
+      });
+      t.setPriority(Thread.MIN_PRIORITY);
+      t.start();
    }
 }
