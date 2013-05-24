@@ -332,6 +332,10 @@ public abstract class Storage<T> {
          this.trimSize = trimSize;
       }
 
+      public int getTrimSize() {
+         return trimSize;
+      }
+
       public List setMeta(String key, Object value) {
          if (meta == null) {
             meta = new HashMap<String, Object>();
