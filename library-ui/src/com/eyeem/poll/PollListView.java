@@ -418,25 +418,28 @@ public class PollListView extends PullToRefreshListView {
             if (dataAdapter != null)
                dataAdapter.notifyDataWillChange(getRefreshableView());
             return;
-         } else if (action.name.equals(Subscription.PUSH)) {
-            String id = String.valueOf(action.param("objectId"));
-            int headerCount = getRefreshableView().getHeaderViewsCount();
-            int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
-            for (int i = start, j = getRefreshableView().getLastVisiblePosition() - headerCount; i <= j; i++)
-               if (i >= 0 && poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
-                  final View view = getRefreshableView().getChildAt(i - start);
-                  final int finalPosition = i;
-                  action.param("singleItemUpdate", true);
-                  post(new Runnable() {
-                     @Override
-                     public void run() {
-                        dataAdapter.clearViewCache();
-                        dataAdapter.getView(finalPosition, view, getRefreshableView());
-                     }
-                  });
-                  break;
-               }
          }
+         // this code is broken for grid, also didn't return. disabling for now
+         // will likely reimplement this in the new PollListView
+//         else if (action.name.equals(Subscription.PUSH)) {
+//            String id = String.valueOf(action.param("objectId"));
+//            int headerCount = getRefreshableView().getHeaderViewsCount();
+//            int start = getRefreshableView().getFirstVisiblePosition() - headerCount;
+//            for (int i = start, j = getRefreshableView().getLastVisiblePosition() - headerCount; i <= j; i++)
+//               if (i >= 0 && poll.getStorage().getById(id).equals(dataAdapter.getItem(i))) {
+//                  final View view = getRefreshableView().getChildAt(i - start);
+//                  final int finalPosition = i;
+//                  action.param("singleItemUpdate", true);
+//                  post(new Runnable() {
+//                     @Override
+//                     public void run() {
+//                        dataAdapter.clearViewCache();
+//                        dataAdapter.getView(finalPosition, view, getRefreshableView());
+//                     }
+//                  });
+//                  break;
+//               }
+//         }
          post(new Runnable() {
             @Override
             public void run() {
