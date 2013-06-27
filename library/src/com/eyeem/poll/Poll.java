@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import com.eyeem.storage.Storage;
@@ -273,7 +272,7 @@ public abstract class Poll<T> {
       public void onExhausted();
    }
 
-   private abstract class RefreshTask extends AsyncTask<Void, Void, ArrayList<T>> {
+   private abstract class RefreshTask extends AsyncTaskCompat<Void, Void, ArrayList<T>> {
       Throwable error;
 
       Vector<Listener> listeners = new Vector<Listener>();
