@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -39,21 +38,15 @@ public abstract class AsyncTaskCompat<Params, Progress, Result> {
    /**
     * An {@link Executor} that can be used to execute tasks in parallel.
     */
-   public static final Executor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
+   private static final Executor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE,
             KEEP_ALIVE, TimeUnit.SECONDS, sPoolWorkQueue, sThreadFactory);
-
-   /**
-    * An {@link Executor} that executes tasks one at a time in serial order.
-    * This serialization is global to a particular process.
-    */
-   public static final Executor SERIAL_EXECUTOR = Executors.newFixedThreadPool(20);
 
    private static final int MESSAGE_POST_RESULT = 0x1;
    private static final int MESSAGE_POST_PROGRESS = 0x2;
 
    private static final InternalHandler sHandler = new InternalHandler();
 
-   private static volatile Executor sDefaultExecutor = SERIAL_EXECUTOR;
+   private static volatile Executor sDefaultExecutor = THREAD_POOL_EXECUTOR;
    private final WorkerRunnable<Params, Result> mWorker;
    private final FutureTask<Result> mFuture;
 
