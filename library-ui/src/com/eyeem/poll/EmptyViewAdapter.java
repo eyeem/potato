@@ -13,7 +13,7 @@ import java.util.HashSet;
 /**
  * One view custom adapter
  */
-public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
+public class EmptyViewAdapter extends BaseAdapter implements PollAdapter {
    // FIXME fill parent issues
 
    View view;
@@ -33,7 +33,7 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    public void setBusy(boolean value) {}
 
    @Override
-   public void refreshViews(ListView lv) {}
+   public void refreshViews(PollListView plv) {}
 
    @Override
    public String idForPosition(int position) {
@@ -46,7 +46,7 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    }
 
    @Override
-   public void notifyDataWithAction(Storage.Subscription.Action action, ListView listView) {
+   public void notifyDataWithAction(Storage.Subscription.Action action, PollListView listView) {
       notifyDataSetChanged();
    }
 
@@ -59,5 +59,5 @@ public class EmptyViewAdapter extends BaseAdapter implements PollAdapter{
    public void clearViewCache() {}
 
    @Override
-   public void notifyDataWillChange(ListView listView) {}
+   public void notifyDataWillChange(PollListView plv) {}
 }
