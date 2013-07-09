@@ -51,11 +51,6 @@ public abstract class Poll<T> {
    protected boolean exhausted;
 
    /**
-    * Indicates whether we're polling or not.
-    */
-   protected boolean polling;
-
-   /**
     * Last time successful {@link #update(Listener, boolean)} occured.
     * UNIX time ms.
     */
@@ -402,5 +397,9 @@ public abstract class Poll<T> {
       });
       t.setPriority(Thread.MIN_PRIORITY);
       t.start();
+   }
+
+   public boolean isPolling() {
+      return (updating != null && updating.working) || (fetchingMore != null && fetchingMore.working);
    }
 }
