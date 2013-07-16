@@ -28,6 +28,8 @@ import com.handmark.pulltorefresh.library.PullToRefreshGridView;
 @SuppressWarnings("rawtypes")
 public class PollGridView extends PullToRefreshGridView implements PollListView {
 
+   int colsNum = 1;
+
    Poll poll;
    BusyIndicator indicator;
    protected PollAdapter dataAdapter;
@@ -188,10 +190,11 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       }
       if (dataAdapter != null && pickAdapter() == dataAdapter) {
          if (currentAdapter != dataAdapter)
-            setAdapter(dataAdapter);
+            setAdapter(currentAdapter = dataAdapter);
          dataAdapter.notifyDataSetChanged();
          dataAdapter.clearViewCache();
       }
+      innerUpdateColsNum();
    }
 
    public void onDestroy() {
@@ -432,6 +435,7 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
          else
             newAdapter.notifyDataWithAction(action, this);
       }
+      innerUpdateColsNum();
    }
 
    Subscription subscription = new Subscription() {
@@ -481,5 +485,18 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
    private int headerHeight() {
       return 0;
+   }
+
+   public void setColsNum(int colsNum) {
+      this.colsNum = colsNum;
+   }
+
+   private void innerUpdateColsNum() {
+      if (currentAdapter == dataAdapter) {
+         getRefreshableView().setNumColumns(colsNum);
+      } else {
+         // otherwise other no content/error views are misaligned
+         getRefreshableView().setNumColumns(1);
+      }
    }
 }
