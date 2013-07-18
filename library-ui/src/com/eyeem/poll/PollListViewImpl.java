@@ -283,8 +283,15 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       post(new Runnable() {
          @Override
          public void run() {
-            if (getRefreshableView().getFooterViewsCount() > 0 && bottomView != null)
-               getRefreshableView().removeFooterView(bottomView);
+            if (getRefreshableView().getFooterViewsCount() > 0 && bottomView != null){
+               // I'm not sure why this is crashing, but it is.
+               // TODO: find what is giving NullPointerException here and fix it.
+               try{
+                  getRefreshableView().removeFooterView(bottomView);
+               }catch(Exception e){
+                  
+               }
+            }
          }
       });
    }
