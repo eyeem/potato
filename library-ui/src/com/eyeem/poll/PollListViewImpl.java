@@ -159,7 +159,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
          topSeenId = null;
          for (int i = 0; i < poll.list.size() && topSeenId == null; i++) {
             String id = poll.list.idForPosition(i);
-            if (dataAdapter.seenIds().contains(id))
+            if (dataAdapter != null && dataAdapter.seenIds().contains(id))
                topSeenId = id;
          }
          poll.list.setMeta("scrollPositionId", scrollPositionId);
