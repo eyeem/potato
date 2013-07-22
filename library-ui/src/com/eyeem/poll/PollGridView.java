@@ -483,6 +483,11 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       poll.update(updateListener, false);
    }
 
+   @Override
+   public void updateIfNecessary() {
+      poll.updateIfNecessary(updateListener);
+   }
+
    private int headerHeight() {
       return 0;
    }
