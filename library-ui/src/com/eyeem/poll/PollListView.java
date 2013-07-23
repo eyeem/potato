@@ -21,6 +21,7 @@ public interface PollListView {
    public void onDestroy();
 
    public void update();
+   public void updateIfNecessary();
 
    public void setShowIndicator(boolean value);
    public void setPoll(Poll poll);

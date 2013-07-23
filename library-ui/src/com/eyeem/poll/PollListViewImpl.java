@@ -112,6 +112,9 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       this.poll = poll;
       if (pollChanged && poll != null && poll.list != null) {
          poll.list.subscribe(subscription);
+         if (dataAdapter != null && currentAdapter == dataAdapter) {
+            dataAdapter.notifyDataSetChanged();
+         }
       }
       setOnRefreshListener(refreshListener);
       getRefreshableView().setOnScrollListener(scrollListener);
@@ -500,6 +503,11 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
     */
    public void update() {
       poll.update(updateListener, false);
+   }
+
+   @Override
+   public void updateIfNecessary() {
+      poll.updateIfNecessary(updateListener);
    }
 
    private int headerHeight() {
