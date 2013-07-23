@@ -36,6 +36,7 @@ public interface PollListView {
 
    public void addHeaderView(View view);
    public void addCustomRefreshRunnable(Runnable runnable);
+   public void addOnScrollListener(AbsListView.OnScrollListener listener);
 
    public Poll getPoll();
    public AbsListView getRefreshableView();
