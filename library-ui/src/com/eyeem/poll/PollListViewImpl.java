@@ -335,6 +335,9 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
 
       @Override
       public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+         for (OnScrollListener l : scrollListeners) {
+            l.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+         }
          if (totalItemCount > 0 && firstVisibleItem > 0 && (totalItemCount - (firstVisibleItem + visibleItemCount)) <= 5) {
             if (poll != null && !poll.exhausted) {
                poll.fetchMore(fetchListener);
@@ -344,6 +347,9 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
 
       @Override
       public void onScrollStateChanged(AbsListView view, int scrollState) {
+         for (OnScrollListener l : scrollListeners) {
+            l.onScrollStateChanged(view, scrollState);
+         }
          if (currentAdapter != dataAdapter)
             return;
 
@@ -525,5 +531,11 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       } catch (Exception e) {
          return 0;
       }
+   }
+
+   ArrayList<OnScrollListener> scrollListeners = new ArrayList<OnScrollListener>();
+   @Override
+   public void addOnScrollListener(OnScrollListener listener) {
+      scrollListeners.add(listener);
    }
 }
