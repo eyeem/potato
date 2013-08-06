@@ -149,6 +149,11 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       getRefreshableView().smoothScrollBy(distance, duration);
    }
 
+   @Override
+   public PollAdapter getDataAdapter() {
+      return dataAdapter;
+   }
+
    /**
     * Call in Activity's or Fragment's onPause
     */

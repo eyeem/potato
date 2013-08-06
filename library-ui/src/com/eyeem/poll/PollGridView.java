@@ -146,6 +146,11 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       getRefreshableView().smoothScrollBy(distance, duration);
    }
 
+   @Override
+   public PollAdapter getDataAdapter() {
+      return dataAdapter;
+   }
+
    /**
     * Call in Activity's or Fragment's onPause
     */
