@@ -45,6 +45,7 @@ public interface PollListView {
    public View getListChildAt(int index);
    public int getListChildCount();
    public void listSmoothScrollBy(int distance, int duration);
+   public PollAdapter getDataAdapter();
 
    public interface PollAdapter extends android.widget.ListAdapter, android.widget.SpinnerAdapter {
       /**
