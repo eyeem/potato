@@ -10,14 +10,11 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
-import android.widget.ListView.FixedViewInfo;
 import android.widget.ListView;
 
 import com.eyeem.lib.ui.R;
 import com.eyeem.storage.Storage.Subscription;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
 /**
  * ListView for {@link Poll}. Takes care of calling {@link Poll}'s functions,
@@ -28,7 +25,7 @@ import com.handmark.pulltorefresh.library.PullToRefreshListView;
  * {@link #setOnErrorView(View)} & {@link #setNoContentView(View)}
  */
 @SuppressWarnings("rawtypes")
-public class PollListViewImpl extends PullToRefreshListView implements PollListView {
+public class PollListViewImpl extends ListView implements PollListView {
 
    Poll poll;
    BusyIndicator indicator;
@@ -74,7 +71,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       if (bottomSpace > 0) {
          bottomView = new View(getContext());
          bottomView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)bottomSpace));
-         getRefreshableView().addFooterView(bottomView);
+         addFooterView(bottomView);
       }
       arr.recycle();
    }
@@ -116,8 +113,8 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
             dataAdapter.notifyDataSetChanged();
          }
       }
-      setOnRefreshListener(refreshListener);
-      getRefreshableView().setOnScrollListener(scrollListener);
+      // TODO setOnRefreshListener(refreshListener);
+      setOnScrollListener(scrollListener);
    }
 
    public Poll getPoll() {
@@ -125,28 +122,33 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
    }
 
    @Override
+   public AbsListView getRefreshableView() {
+      return this;
+   }
+
+   @Override
    public int getListFirstVisiblePosition() {
-      return getRefreshableView().getFirstVisiblePosition();
+      return getFirstVisiblePosition();
    }
 
    @Override
    public int getListHeaderViewsCount() {
-      return getRefreshableView().getHeaderViewsCount();
+      return getHeaderViewsCount();
    }
 
    @Override
    public View getListChildAt(int index) {
-      return getRefreshableView().getChildAt(index);
+      return getChildAt(index);
    }
 
    @Override
    public int getListChildCount() {
-      return getRefreshableView().getChildCount();
+      return getChildCount();
    }
 
    @Override
    public void listSmoothScrollBy(int distance, int duration) {
-      getRefreshableView().smoothScrollBy(distance, duration);
+      smoothScrollBy(distance, duration);
    }
 
    @Override
@@ -159,7 +161,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
     */
    public void onPause() {
       if (poll != null) {
-         int position = getRefreshableView().getFirstVisiblePosition() - getRefreshableView().getHeaderViewsCount();
+         int position = getFirstVisiblePosition() - getHeaderViewsCount();
          position = Math.max(position, 0);
          if (poll.list.size() > 0 && dataAdapter != null) {
             scrollPositionId = dataAdapter.idForPosition(position);
@@ -221,18 +223,18 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
    }
 
    @Override
+   public void setMode(PullToRefreshBase.Mode mode) {
+      // TODO remove
+   }
+
+   @Override
    public void setListSelectionFromTop(int index, int px) {
-      getRefreshableView().setSelectionFromTop(index, px);
+      setSelectionFromTop(index, px);
    }
 
    @Override
    public void setListSelection(int index) {
-     getRefreshableView().setSelection(index);
-   }
-
-   @Override
-   public void addHeaderView(View view) {
-      getRefreshableView().addHeaderView(view);
+     setSelection(index);
    }
 
    /**
@@ -281,8 +283,8 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       post(new Runnable() {
          @Override
          public void run() {
-            if (getRefreshableView().getFooterViewsCount() == 0)
-               getRefreshableView().addFooterView(bottomView);
+            if (getFooterViewsCount() == 0)
+               addFooterView(bottomView);
          }
       });
    }
@@ -291,11 +293,11 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       post(new Runnable() {
          @Override
          public void run() {
-            if (getRefreshableView().getFooterViewsCount() > 0 && bottomView != null){
+            if (getFooterViewsCount() > 0 && bottomView != null){
                // I'm not sure why this is crashing, but it is.
                // TODO: find what is giving NullPointerException here and fix it.
                try{
-                  getRefreshableView().removeFooterView(bottomView);
+                  removeFooterView(bottomView);
                }catch(Exception e){
                   
                }
@@ -305,16 +307,16 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
    }
 
    private void messageWithDelay(String message) {
-      PollListViewImpl.this.setRefreshingLabel(message);
-      postDelayed(new Runnable() {
-         @Override
-         public void run() {
-            PollListViewImpl.this.onRefreshComplete();
-         }
-      }, 2000);
+//      PollListViewImpl.this.setRefreshingLabel(message);
+//      postDelayed(new Runnable() {
+//         @Override
+//         public void run() {
+//            PollListViewImpl.this.onRefreshComplete();
+//         }
+//      }, 2000);
    }
 
-   private OnRefreshListener<ListView> refreshListener = new OnRefreshListener<ListView>() {
+   /*private OnRefreshListener<ListView> refreshListener = new OnRefreshListener<ListView>() {
 
       @Override
       public void onRefresh(PullToRefreshBase<ListView> refreshView) {
@@ -325,7 +327,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
          }
       }
 
-   };
+   };*/
 
    /**
     * Basically sets adapter in busy mode whenever scroll is in
@@ -440,7 +442,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
 
       @Override
       public void onStart() {
-         PollListViewImpl.this.setRefreshingLabel(getContext().getString(progressLabelId));
+         // TODO PollListViewImpl.this.setRefreshingLabel(getContext().getString(progressLabelId));
          if (indicator != null && poll.getState() == Poll.STATE_UNKNOWN)
             indicator.setBusyIndicator(true);
       }
@@ -456,7 +458,7 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       if (newAdapter == null)
          return;
       if (currentAdapter != newAdapter) {
-         getRefreshableView().setAdapter(currentAdapter = newAdapter);
+         setAdapter(currentAdapter = newAdapter);
       }
       if (newAdapter == noContentAdapter) {
          hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - headerHeight()));
@@ -521,10 +523,15 @@ public class PollListViewImpl extends PullToRefreshListView implements PollListV
       poll.updateIfNecessary(updateListener);
    }
 
+   @Override
+   public void setShowIndicator(boolean value) {
+      // TODO remove
+   }
+
    private int headerHeight() {
       try {
          int h = 0;
-         ListView lv = getRefreshableView();
+         ListView lv = this;
          Field f = ListView.class.getDeclaredField("mHeaderViewInfos");
          f.setAccessible(true);
          @SuppressWarnings("unchecked")
