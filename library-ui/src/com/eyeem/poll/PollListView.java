@@ -2,10 +2,13 @@ package com.eyeem.poll;
 
 import android.view.View;
 import android.widget.AbsListView;
+import android.widget.BaseAdapter;
+
 import com.eyeem.storage.Storage;
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
 
 import java.util.HashSet;
+
+import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshAttacher;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,13 +26,11 @@ public interface PollListView {
    public void update();
    public void updateIfNecessary();
 
-   public void setShowIndicator(boolean value);
    public void setPoll(Poll poll);
    public void setBusyIndicator(BusyIndicator indicator);
    public void setDataAdapter(PollAdapter adapter);
    public void setNoContentView(View view);
    public void setOnErrorView(View view);
-   public void setMode(PullToRefreshBase.Mode mode);
 
    public void setListSelectionFromTop(int index, int px);
    public void setListSelection(int index);
@@ -39,13 +40,20 @@ public interface PollListView {
    public void addOnScrollListener(AbsListView.OnScrollListener listener);
 
    public Poll getPoll();
-   public AbsListView getRefreshableView();
    public int getListFirstVisiblePosition();
    public int getListHeaderViewsCount();
    public View getListChildAt(int index);
    public int getListChildCount();
    public void listSmoothScrollBy(int distance, int duration);
    public PollAdapter getDataAdapter();
+
+   public PullToRefreshAttacher.OnRefreshListener getOnRefreshListener();
+
+   /**
+    * Don't use this, use setDataAdapter instead
+    * @param adapter
+    */
+   public void setAdapter(android.widget.ListAdapter adapter);
 
    public interface PollAdapter extends android.widget.ListAdapter, android.widget.SpinnerAdapter {
       /**
@@ -100,5 +108,6 @@ public interface PollListView {
     */
    public interface BusyIndicator {
       public void setBusyIndicator(boolean busy_flag);
+      public void pullToRefreshDone();
    }
 }

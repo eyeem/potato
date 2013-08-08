@@ -1,8 +1,8 @@
 package com.eyeem.poll;
 
+import android.view.View;
 import android.widget.BaseAdapter;
 import com.eyeem.storage.Storage;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
 import java.util.HashSet;
 
@@ -15,12 +15,8 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
 
    @Override
    public void notifyDataWillChange(PollListView plv) {
-      boolean pullToRefreshList = false;
-      try {
-         pullToRefreshList = plv.getRefreshableView().getParent().getParent() instanceof PullToRefreshListView;
-      } catch (Throwable t) {}
       int i = plv.getListFirstVisiblePosition() - plv.getListHeaderViewsCount();
-      if (i >= 0 || (pullToRefreshList && i+1 >= 0)) {
+      if (i >= 0) {
          // pull to refresh library adds a framelayout header by default so
          // we need to compensate for that
          firstId = idForPosition(i < 0 ? 0 : i);
@@ -42,7 +38,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
          if (!paused && index > 0) {
             plv.setListSelectionFromTop(index + plv.getListHeaderViewsCount(), px);
             if (index == 1) {
-               plv.getRefreshableView().postDelayed(new Runnable() {
+               ((View)plv).postDelayed(new Runnable() {
 
                   int counter = 0;
 
@@ -59,7 +55,7 @@ public abstract class AnimatedPollAdapter extends BaseAdapter implements PollLis
                         distance = plv.getListChildAt(0).getHeight() * offset; // approx
 
                      plv.listSmoothScrollBy(-distance, duration);
-                     plv.getRefreshableView().postDelayed(this, duration);
+                     ((View)plv).postDelayed(this, duration);
                      counter++;
                   }
                }, 500);

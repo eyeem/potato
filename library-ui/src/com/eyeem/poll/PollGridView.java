@@ -9,13 +9,12 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.GridView;
 
 import com.eyeem.lib.ui.R;
 import com.eyeem.storage.Storage.Subscription;
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
-import com.handmark.pulltorefresh.library.PullToRefreshGridView;
+
+import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshAttacher;
 
 /**
  * ListView for {@link Poll}. Takes care of calling {@link Poll}'s functions,
@@ -26,7 +25,7 @@ import com.handmark.pulltorefresh.library.PullToRefreshGridView;
  * {@link #setOnErrorView(View)} & {@link #setNoContentView(View)}
  */
 @SuppressWarnings("rawtypes")
-public class PollGridView extends PullToRefreshGridView implements PollListView {
+public class PollGridView extends GridView implements PollListView {
 
    int colsNum = 1;
 
@@ -112,9 +111,12 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       this.poll = poll;
       if (pollChanged && poll != null && poll.list != null) {
          poll.list.subscribe(subscription);
+         if (dataAdapter != null && currentAdapter == dataAdapter) {
+            dataAdapter.notifyDataSetChanged();
+         }
       }
-      setOnRefreshListener(refreshListener);
-      getRefreshableView().setOnScrollListener(scrollListener);
+      // TODO setOnRefreshListener(refreshListener);
+      setOnScrollListener(scrollListener);
    }
 
    public Poll getPoll() {
@@ -123,7 +125,7 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
    @Override
    public int getListFirstVisiblePosition() {
-      return getRefreshableView().getFirstVisiblePosition();
+      return getFirstVisiblePosition();
    }
 
    @Override
@@ -133,17 +135,17 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
    @Override
    public View getListChildAt(int index) {
-      return getRefreshableView().getChildAt(index);
+      return getChildAt(index);
    }
 
    @Override
    public int getListChildCount() {
-      return getRefreshableView().getChildCount();
+      return getChildCount();
    }
 
    @Override
    public void listSmoothScrollBy(int distance, int duration) {
-      getRefreshableView().smoothScrollBy(distance, duration);
+      smoothScrollBy(distance, duration);
    }
 
    @Override
@@ -151,12 +153,17 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       return dataAdapter;
    }
 
+   @Override
+   public PullToRefreshAttacher.OnRefreshListener getOnRefreshListener() {
+      return refreshListener;
+   }
+
    /**
     * Call in Activity's or Fragment's onPause
     */
    public void onPause() {
       if (poll != null) {
-         int position = getRefreshableView().getFirstVisiblePosition() /*- getRefreshableView().getHeaderViewsCount()*/;
+         int position = getFirstVisiblePosition() /*- getHeaderViewsCount()*/;
          position = Math.max(position, 0);
          if (poll.list.size() > 0 && dataAdapter != null) {
             scrollPositionId = dataAdapter.idForPosition(position);
@@ -220,17 +227,17 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
    @Override
    public void setListSelectionFromTop(int index, int px) {
-      getRefreshableView().setSelection(index);
+      setSelection(index);
    }
 
    @Override
    public void setListSelection(int index) {
-      getRefreshableView().setSelection(index);
+      setSelection(index);
    }
 
    @Override
    public void addHeaderView(View view) {
-      //getRefreshableView().addHeaderView(view);
+      // NO HEADER HERE
    }
 
    /**
@@ -276,32 +283,32 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
    }
 
    private void addFooter() {
+      // no footer for grid view
    }
 
    private void removeFooter() {
+      // ditto
    }
 
-   private void messageWithDelay(String message) {
-      PollGridView.this.setRefreshingLabel(message);
-      postDelayed(new Runnable() {
-         @Override
-         public void run() {
-            PollGridView.this.onRefreshComplete();
-         }
-      }, 2000);
-   }
+//   private void messageWithDelay(String message) {
+//      PollGridView.this.setRefreshingLabel(message);
+//      postDelayed(new Runnable() {
+//         @Override
+//         public void run() {
+//            PollGridView.this.onRefreshComplete();
+//         }
+//      }, 2000);
+//   }
 
-   private OnRefreshListener<GridView> refreshListener = new OnRefreshListener<GridView>() {
-
+   private PullToRefreshAttacher.OnRefreshListener refreshListener = new PullToRefreshAttacher.OnRefreshListener() {
       @Override
-      public void onRefresh(PullToRefreshBase<GridView> refreshView) {
+      public void onRefreshStarted(View view) {
          if (poll != null) {
             poll.update(updateListener, true);
             for (Runnable r : customRefreshRunnables)
                r.run();
          }
       }
-
    };
 
    /**
@@ -392,15 +399,19 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
          String msg = null;
          if (error == null || (msg = error.getMessage()) == null || TextUtils.isEmpty(msg))
             msg = getContext().getString(problemsLabelId);
-         messageWithDelay(msg);
-         if (indicator != null)
+         //messageWithDelay(msg);
+         if (indicator != null) {
+            indicator.pullToRefreshDone();
             indicator.setBusyIndicator(false);
+         }
       }
 
       @Override
       public void onSuccess(int newCount) {
-         if (poll != null)
-            messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
+         if (poll != null && indicator != null) {
+            indicator.pullToRefreshDone();
+         }
+         //messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
 
          if (indicator != null)
             indicator.setBusyIndicator(false);
@@ -417,7 +428,7 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
       @Override
       public void onStart() {
-         PollGridView.this.setRefreshingLabel(getContext().getString(progressLabelId));
+         // PollGridView.this.setRefreshingLabel(getContext().getString(progressLabelId));
          if (indicator != null && poll.getState() == Poll.STATE_UNKNOWN)
             indicator.setBusyIndicator(true);
       }
@@ -433,7 +444,7 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
       if (newAdapter == null)
          return;
       if (currentAdapter != newAdapter) {
-         getRefreshableView().setAdapter(currentAdapter = newAdapter);
+         setAdapter(currentAdapter = newAdapter);
       }
       if (newAdapter == noContentAdapter) {
          hackingEmptyView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT, getHeight() - headerHeight()));
@@ -509,10 +520,10 @@ public class PollGridView extends PullToRefreshGridView implements PollListView 
 
    private void innerUpdateColsNum() {
       if (currentAdapter == dataAdapter) {
-         getRefreshableView().setNumColumns(colsNum);
+         setNumColumns(colsNum);
       } else {
          // otherwise other no content/error views are misaligned
-         getRefreshableView().setNumColumns(1);
+         setNumColumns(1);
       }
    }
 

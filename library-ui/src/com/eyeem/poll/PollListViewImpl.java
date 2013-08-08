@@ -14,7 +14,8 @@ import android.widget.ListView;
 
 import com.eyeem.lib.ui.R;
 import com.eyeem.storage.Storage.Subscription;
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
+
+import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshAttacher;
 
 /**
  * ListView for {@link Poll}. Takes care of calling {@link Poll}'s functions,
@@ -122,11 +123,6 @@ public class PollListViewImpl extends ListView implements PollListView {
    }
 
    @Override
-   public AbsListView getRefreshableView() {
-      return this;
-   }
-
-   @Override
    public int getListFirstVisiblePosition() {
       return getFirstVisiblePosition();
    }
@@ -154,6 +150,11 @@ public class PollListViewImpl extends ListView implements PollListView {
    @Override
    public PollAdapter getDataAdapter() {
       return dataAdapter;
+   }
+
+   @Override
+   public PullToRefreshAttacher.OnRefreshListener getOnRefreshListener() {
+      return refreshListener;
    }
 
    /**
@@ -220,11 +221,6 @@ public class PollListViewImpl extends ListView implements PollListView {
     */
    public void setOnErrorView(View view) {
       onErrorAdapter = new EmptyViewAdapter(view);
-   }
-
-   @Override
-   public void setMode(PullToRefreshBase.Mode mode) {
-      // TODO remove
    }
 
    @Override
@@ -299,35 +295,36 @@ public class PollListViewImpl extends ListView implements PollListView {
                try{
                   removeFooterView(bottomView);
                }catch(Exception e){
-                  
+
                }
             }
          }
       });
    }
 
-   private void messageWithDelay(String message) {
-//      PollListViewImpl.this.setRefreshingLabel(message);
+//   private void messageWithDelay(String message) {
+//      PullToRefreshAttacher attacher = _attacher.get();
+//      if (attacher == null)
+//         return;
+//      // TODO setRefreshingLabel(message);
 //      postDelayed(new Runnable() {
 //         @Override
 //         public void run() {
-//            PollListViewImpl.this.onRefreshComplete();
+//            pullRefreshDone();
 //         }
 //      }, 2000);
-   }
+//   }
 
-   /*private OnRefreshListener<ListView> refreshListener = new OnRefreshListener<ListView>() {
-
+   private PullToRefreshAttacher.OnRefreshListener refreshListener = new PullToRefreshAttacher.OnRefreshListener() {
       @Override
-      public void onRefresh(PullToRefreshBase<ListView> refreshView) {
+      public void onRefreshStarted(View view) {
          if (poll != null) {
             poll.update(updateListener, true);
             for (Runnable r : customRefreshRunnables)
                r.run();
          }
       }
-
-   };*/
+   };
 
    /**
     * Basically sets adapter in busy mode whenever scroll is in
@@ -417,15 +414,19 @@ public class PollListViewImpl extends ListView implements PollListView {
          String msg = null;
          if (error == null || (msg = error.getMessage()) == null || TextUtils.isEmpty(msg))
             msg = getContext().getString(problemsLabelId);
-         messageWithDelay(msg);
-         if (indicator != null)
+         //messageWithDelay(msg);
+         if (indicator != null) {
+            indicator.pullToRefreshDone();
             indicator.setBusyIndicator(false);
+         }
       }
 
       @Override
       public void onSuccess(int newCount) {
-         if (poll != null)
-            messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
+         if (poll != null && indicator != null) {
+            indicator.pullToRefreshDone();
+         }
+            //messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
 
          if (indicator != null)
             indicator.setBusyIndicator(false);
@@ -521,11 +522,6 @@ public class PollListViewImpl extends ListView implements PollListView {
    @Override
    public void updateIfNecessary() {
       poll.updateIfNecessary(updateListener);
-   }
-
-   @Override
-   public void setShowIndicator(boolean value) {
-      // TODO remove
    }
 
    private int headerHeight() {
