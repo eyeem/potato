@@ -1,5 +1,6 @@
 package com.eyeem.poll;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -10,9 +11,9 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
-import android.widget.GridView;
+import android.widget.ListView;
 
-import com.eyeem.lib.ui.R;
+import com.eyeem.storage.ui.R;
 import com.eyeem.storage.Storage.Subscription;
 
 /**
@@ -24,9 +25,7 @@ import com.eyeem.storage.Storage.Subscription;
  * {@link #setOnErrorView(View)} & {@link #setNoContentView(View)}
  */
 @SuppressWarnings("rawtypes")
-public class PollGridView extends GridView implements PollListView {
-
-   int colsNum = 1;
+public class PollListViewImpl extends ListView implements PollListView {
 
    Poll poll;
    BusyIndicator indicator;
@@ -53,13 +52,13 @@ public class PollGridView extends GridView implements PollListView {
     */
    int progressLabelId;
 
-   public PollGridView(Context context) {
+   public PollListViewImpl(Context context) {
       super(context);
       progressLabelId = R.string.default_progress_label;
       problemsLabelId = R.string.default_problems_label;
    }
 
-   public PollGridView(Context context, AttributeSet attrs) {
+   public PollListViewImpl(Context context, AttributeSet attrs) {
       super(context, attrs);
       loadAttributes(context, attrs);
    }
@@ -72,7 +71,7 @@ public class PollGridView extends GridView implements PollListView {
       if (bottomSpace > 0) {
          bottomView = new View(getContext());
          bottomView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)bottomSpace));
-         //getRefreshableView().addFooterView(bottomView);
+         addFooterView(bottomView);
       }
       arr.recycle();
    }
@@ -131,7 +130,7 @@ public class PollGridView extends GridView implements PollListView {
 
    @Override
    public int getListHeaderViewsCount() {
-      return 0;
+      return getHeaderViewsCount();
    }
 
    @Override
@@ -154,21 +153,12 @@ public class PollGridView extends GridView implements PollListView {
       return dataAdapter;
    }
 
-   @Override
-   public void performPullToRefresh() {
-      if (poll != null) {
-         poll.update(updateListener, true);
-         for (Runnable r : customRefreshRunnables)
-            r.run();
-      }
-   }
-
    /**
     * Call in Activity's or Fragment's onPause
     */
    public void onPause() {
       if (poll != null) {
-         int position = getFirstVisiblePosition() /*- getHeaderViewsCount()*/;
+         int position = getFirstVisiblePosition() - getHeaderViewsCount();
          position = Math.max(position, 0);
          if (poll.list.size() > 0 && dataAdapter != null) {
             scrollPositionId = dataAdapter.idForPosition(position);
@@ -176,7 +166,7 @@ public class PollGridView extends GridView implements PollListView {
          topSeenId = null;
          for (int i = 0; i < poll.list.size() && topSeenId == null; i++) {
             String id = poll.list.idForPosition(i);
-            if (dataAdapter.seenIds().contains(id))
+            if (dataAdapter != null && dataAdapter.seenIds().contains(id))
                topSeenId = id;
          }
          poll.list.setMeta("scrollPositionId", scrollPositionId);
@@ -207,11 +197,10 @@ public class PollGridView extends GridView implements PollListView {
       }
       if (dataAdapter != null && pickAdapter() == dataAdapter) {
          if (currentAdapter != dataAdapter)
-            setAdapter(currentAdapter = dataAdapter);
+            setAdapter(dataAdapter);
          dataAdapter.notifyDataSetChanged();
          dataAdapter.clearViewCache();
       }
-      innerUpdateColsNum();
    }
 
    public void onDestroy() {
@@ -232,17 +221,12 @@ public class PollGridView extends GridView implements PollListView {
 
    @Override
    public void setListSelectionFromTop(int index, int px) {
-      setSelection(index);
+      setSelectionFromTop(index, px);
    }
 
    @Override
    public void setListSelection(int index) {
-      setSelection(index);
-   }
-
-   @Override
-   public void addHeaderView(View view) {
-      // NO HEADER HERE
+     setSelection(index);
    }
 
    /**
@@ -288,22 +272,53 @@ public class PollGridView extends GridView implements PollListView {
    }
 
    private void addFooter() {
-      // no footer for grid view
+      post(new Runnable() {
+         @Override
+         public void run() {
+            if (getFooterViewsCount() == 0)
+               addFooterView(bottomView);
+         }
+      });
    }
 
    private void removeFooter() {
-      // ditto
+      post(new Runnable() {
+         @Override
+         public void run() {
+            if (getFooterViewsCount() > 0 && bottomView != null){
+               // I'm not sure why this is crashing, but it is.
+               // TODO: find what is giving NullPointerException here and fix it.
+               try{
+                  removeFooterView(bottomView);
+               }catch(Exception e){
+
+               }
+            }
+         }
+      });
    }
 
 //   private void messageWithDelay(String message) {
-//      PollGridView.this.setRefreshingLabel(message);
+//      PullToRefreshAttacher attacher = _attacher.get();
+//      if (attacher == null)
+//         return;
+//      // TODO setRefreshingLabel(message);
 //      postDelayed(new Runnable() {
 //         @Override
 //         public void run() {
-//            PollGridView.this.onRefreshComplete();
+//            pullRefreshDone();
 //         }
 //      }, 2000);
 //   }
+
+   @Override
+   public void performPullToRefresh() {
+      if (poll != null) {
+         poll.update(updateListener, true);
+         for (Runnable r : customRefreshRunnables)
+            r.run();
+      }
+   }
 
    /**
     * Basically sets adapter in busy mode whenever scroll is in
@@ -342,7 +357,7 @@ public class PollGridView extends GridView implements PollListView {
          } else if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && wasFlinging) {
             dataAdapter.setBusy(false);
             wasFlinging = false;
-            dataAdapter.refreshViews(PollGridView.this);
+            dataAdapter.refreshViews(PollListViewImpl.this);
          } else {
             dataAdapter.setBusy(false);
          }
@@ -405,7 +420,7 @@ public class PollGridView extends GridView implements PollListView {
          if (poll != null && indicator != null) {
             indicator.pullToRefreshDone();
          }
-         //messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
+            //messageWithDelay(poll.getSuccessMessage(getContext(), newCount));
 
          if (indicator != null)
             indicator.setBusyIndicator(false);
@@ -422,7 +437,7 @@ public class PollGridView extends GridView implements PollListView {
 
       @Override
       public void onStart() {
-         // PollGridView.this.setRefreshingLabel(getContext().getString(progressLabelId));
+         // TODO PollListViewImpl.this.setRefreshingLabel(getContext().getString(progressLabelId));
          if (indicator != null && poll.getState() == Poll.STATE_UNKNOWN)
             indicator.setBusyIndicator(true);
       }
@@ -451,7 +466,6 @@ public class PollGridView extends GridView implements PollListView {
          else
             newAdapter.notifyDataWithAction(action, this);
       }
-      innerUpdateColsNum();
    }
 
    Subscription subscription = new Subscription() {
@@ -459,7 +473,7 @@ public class PollGridView extends GridView implements PollListView {
       public void onUpdate(final Action action) {
          if (action.name.equals(Subscription.WILL_CHANGE)) {
             if (dataAdapter != null)
-               dataAdapter.notifyDataWillChange(PollGridView.this);
+               dataAdapter.notifyDataWillChange(PollListViewImpl.this);
             return;
          }
          // this code is broken for grid, also didn't return. disabling for now
@@ -505,19 +519,19 @@ public class PollGridView extends GridView implements PollListView {
    }
 
    private int headerHeight() {
-      return 0;
-   }
-
-   public void setColsNum(int colsNum) {
-      this.colsNum = colsNum;
-   }
-
-   private void innerUpdateColsNum() {
-      if (currentAdapter == dataAdapter) {
-         setNumColumns(colsNum);
-      } else {
-         // otherwise other no content/error views are misaligned
-         setNumColumns(1);
+      try {
+         int h = 0;
+         ListView lv = this;
+         Field f = ListView.class.getDeclaredField("mHeaderViewInfos");
+         f.setAccessible(true);
+         @SuppressWarnings("unchecked")
+         ArrayList<FixedViewInfo> mHeaderViewInfos = (ArrayList<FixedViewInfo>) f.get(lv);
+         for (FixedViewInfo i : mHeaderViewInfos) {
+            h += i.view.getHeight();
+         }
+         return h;
+      } catch (Exception e) {
+         return 0;
       }
    }
 
