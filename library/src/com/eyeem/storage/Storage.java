@@ -90,7 +90,7 @@ public abstract class Storage<T> {
       for (WeakReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null) {
-            list.clear();
+            list.saveSync();
          }
       }
    }

@@ -1,6 +1,7 @@
 package com.eyeem.poll;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -527,9 +528,14 @@ public class PollGridView extends GridView implements PollListView {
       }
    }
 
-   ArrayList<OnScrollListener> scrollListeners = new ArrayList<OnScrollListener>();
+   HashSet<OnScrollListener> scrollListeners = new HashSet<OnScrollListener>();
    @Override
    public void addOnScrollListener(OnScrollListener listener) {
       scrollListeners.add(listener);
+   }
+
+   @Override
+   public void removeOnScrollListener(OnScrollListener listener) {
+      scrollListeners.remove(listener);
    }
 }
