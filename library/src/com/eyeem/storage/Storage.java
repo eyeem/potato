@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.ObjectStreamClass;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -46,6 +47,8 @@ import com.esotericsoftware.kryo.io.Output;
  */
 @SuppressWarnings("unchecked")
 public abstract class Storage<T> {
+
+   private static final String DOT = ".";
 
    LruCache<String, T> cache;
    HashMap<String, WeakReference<List>> lists;
@@ -416,12 +419,51 @@ public abstract class Storage<T> {
          subscribers.removeAllSubscribers();
       }
 
+      private String getSerialVersionUID() {
+         return Long.toString(ObjectStreamClass.lookupAny(classname()).getSerialVersionUID());
+      }
+
+      private void deleteFilesRecursively(String folder) {
+         try {
+            File f = new File(folder);
+            // dig deeper into that folder
+            if (f.isDirectory()) {
+               // don't delete stuff from the current folder
+               if (!f.getAbsolutePath().endsWith(getSerialVersionUID())) {
+
+                  // get the list of files to be deleted
+                  String[] list = f.list();
+                  if (list != null)
+                     for (String path : list)
+                        deleteFilesRecursively(f.getAbsolutePath() + File.separator + path);
+
+                  // don't delete the base folder, have to compare like this to account for File.separator
+                  if (!f.getAbsolutePath().equals(new File(getBaseDir()).getAbsolutePath())) {
+                     // all files deleted, let's delete the folder
+                     Log.d(this.getClass().getSimpleName(), "Storage cleanup, deleting directory: " + f.getAbsolutePath());
+                     f.delete();
+                  }
+               }
+            } else {
+               // delete this file
+               Log.d(this.getClass().getSimpleName(), "Storage cleanup, deleting file: " + f.getAbsolutePath());
+               f.delete();
+            }
+         } catch (Throwable t) {
+            // this code doesn't throw anything, ever!
+         }
+      }
+
+      private String getBaseDir(){
+         return context.getCacheDir() + File.separator + classname().getSimpleName() + File.separator;
+      }
+
       private String dirname() {
-         return context.getCacheDir() + "/" + classname().getSimpleName() + "/";
+         return getBaseDir() + getSerialVersionUID() + File.separator;
       }
 
       public String filename() {
-         return dirname() + name + ".json";
+         return dirname() + name;
       }
 
       /**
@@ -460,6 +502,8 @@ public abstract class Storage<T> {
             return true;
             // FIXME don't add objects that already exist in cache as they're most likely fresher
          } catch (FileNotFoundException e) {
+            // clean up
+            deleteFilesRecursively(getBaseDir());
             Log.w(classname().getSimpleName(), "load() error: file "+filename()+" missing");
          } catch (Throwable e) {
             Log.e(classname().getSimpleName(), "load() error", e);
