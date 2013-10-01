@@ -2,13 +2,10 @@ package com.eyeem.poll;
 
 import android.view.View;
 import android.widget.AbsListView;
-import android.widget.BaseAdapter;
 
 import com.eyeem.storage.Storage;
 
 import java.util.HashSet;
-
-import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshAttacher;
 
 /**
  * Created with IntelliJ IDEA.
@@ -48,7 +45,7 @@ public interface PollListView {
    public void listSmoothScrollBy(int distance, int duration);
    public PollAdapter getDataAdapter();
 
-   public PullToRefreshAttacher.OnRefreshListener getOnRefreshListener();
+   public void performPullToRefresh();
 
    /**
     * Don't use this, use setDataAdapter instead
