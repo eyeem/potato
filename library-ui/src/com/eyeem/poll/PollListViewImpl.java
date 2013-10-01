@@ -16,8 +16,6 @@ import android.widget.ListView;
 import com.eyeem.lib.ui.R;
 import com.eyeem.storage.Storage.Subscription;
 
-import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshAttacher;
-
 /**
  * ListView for {@link Poll}. Takes care of calling {@link Poll}'s functions,
  * provides all the goodies like pull-to-refresh and infinite scroll. All you
@@ -151,11 +149,6 @@ public class PollListViewImpl extends ListView implements PollListView {
    @Override
    public PollAdapter getDataAdapter() {
       return dataAdapter;
-   }
-
-   @Override
-   public PullToRefreshAttacher.OnRefreshListener getOnRefreshListener() {
-      return refreshListener;
    }
 
    /**
@@ -316,16 +309,14 @@ public class PollListViewImpl extends ListView implements PollListView {
 //      }, 2000);
 //   }
 
-   private PullToRefreshAttacher.OnRefreshListener refreshListener = new PullToRefreshAttacher.OnRefreshListener() {
-      @Override
-      public void onRefreshStarted(View view) {
-         if (poll != null) {
-            poll.update(updateListener, true);
-            for (Runnable r : customRefreshRunnables)
-               r.run();
-         }
+   @Override
+   public void performPullToRefresh() {
+      if (poll != null) {
+         poll.update(updateListener, true);
+         for (Runnable r : customRefreshRunnables)
+            r.run();
       }
-   };
+   }
 
    /**
     * Basically sets adapter in busy mode whenever scroll is in
