@@ -402,4 +402,10 @@ public abstract class Poll<T> {
    public boolean isPolling() {
       return (updating != null && updating.working) || (fetchingMore != null && fetchingMore.working);
    }
+
+   public void dontUpdateForNext(long milliseconds) {
+      long newLastTimeUpdate = System.currentTimeMillis() - milliseconds;
+      if (newLastTimeUpdate > lastTimeUpdated)
+         lastTimeUpdated = newLastTimeUpdate;
+   }
 }
