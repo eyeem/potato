@@ -624,8 +624,9 @@ public abstract class Storage<T> {
          ArrayList<String> collectionIds = new ArrayList<String>();
          for (Object t : collection) {
             String id = id((T)t);
-            if ((!dedupe) || (dedupe && !ids.contains(id)))
+            if ((!dedupe) || (dedupe && !ids.contains(id) && !collectionIds.contains(id))) {
                collectionIds.add(id);
+            }
             addOrUpdate(id, (T)t);
          }
          boolean value = ids.addAll(location, collectionIds);
