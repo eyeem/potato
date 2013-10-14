@@ -112,6 +112,8 @@ public class PollGridView extends GridView implements PollListView {
          poll.list.subscribe(subscription);
          if (dataAdapter != null && currentAdapter == dataAdapter) {
             dataAdapter.notifyDataSetChanged();
+         } else if (currentAdapter != dataAdapter) {
+            reloadAdapters(null);
          }
       }
       // TODO setOnRefreshListener(refreshListener);
