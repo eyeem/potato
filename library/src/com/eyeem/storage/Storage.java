@@ -624,7 +624,18 @@ public abstract class Storage<T> {
          ArrayList<String> collectionIds = new ArrayList<String>();
          for (Object t : collection) {
             String id = id((T)t);
-            if ((!dedupe) || (dedupe && !ids.contains(id) && !collectionIds.contains(id))) {
+            if (dedupe) {
+               if (ids.contains(id)) {
+                  // if there is a duplicate it should get removed so that
+                  // it gets inserted near requested location
+                  ids.remove(id);
+               }
+               if (!collectionIds.contains(id)) {
+                  // the list that's going to be appended might contain duplicates on its own
+                  collectionIds.add(id);
+               }
+            } else {
+               // add anything
                collectionIds.add(id);
             }
             addOrUpdate(id, (T)t);
