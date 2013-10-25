@@ -1,5 +1,8 @@
 buildscript {
     repositories {
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
         mavenCentral()
         mavenLocal()
     }
@@ -14,7 +17,11 @@ apply plugin: 'android-test'
 
 dependencies {
     repositories {
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
         mavenCentral()
+        mavenLocal()
     }
 
     compile files('libs/kryo-2.20-all.jar')
