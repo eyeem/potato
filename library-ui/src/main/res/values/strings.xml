@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">EyeEmLibraryUI</string>
-    <string name="default_problems_label">Connection problems</string>
-    <string name="default_progress_label">Loading</string>
-</resources>
