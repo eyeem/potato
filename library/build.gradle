@@ -41,7 +41,7 @@ android {
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version = "0.9.0-SNAPSHOT"
+version = "0.9.0"
 group = "com.eyeem.potato"
 
 configurations {
@@ -61,8 +61,11 @@ uploadArchives {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
         repository(url: sonatypeRepo) {
-            authentication(userName: sonatypeUsername,
-                    password: sonatypePassword)
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        }
+
+        snapshotRepository(url: sonatypeSnapshotRepo) {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
         }
 
         pom.project {
