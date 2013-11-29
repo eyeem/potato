@@ -454,7 +454,11 @@ public abstract class Storage<T> {
          }
       }
 
-      private String getBaseDir(){
+      public String getName() {
+        return name;
+      }
+
+      private String getBaseDir() {
          return context.getCacheDir() + File.separator + classname().getSimpleName() + File.separator;
       }
 
