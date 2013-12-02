@@ -29,7 +29,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
    }
 
    @Override
-   protected int appendNewItems(ArrayList<T> newItems, Poll.Listener listener, boolean cleanUp) {
+   protected int appendNewItems(ArrayList<T> newItems, boolean cleanUp) {
       int newCount = newItems.size();
       for (T item : newItems) {
          if (list.contains(item))
@@ -52,7 +52,7 @@ public abstract class PaginatedPoll<T> extends Poll<T> {
 
    @SuppressWarnings({ "unchecked", "rawtypes" })
    @Override
-   protected int appendOldItems(ArrayList<T> oldItems, Poll.Listener listener) {
+   protected int appendOldItems(ArrayList<T> oldItems) {
       Log.i(getClass().getSimpleName(), "offset = "+offset());
       int count = oldItems.size();
       for (T item : oldItems) {

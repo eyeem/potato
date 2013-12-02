@@ -1,7 +1,7 @@
 package com.eyeem.poll;
 
 import java.util.ArrayList;
-import java.util.Vector;
+import java.util.HashSet;
 
 import android.content.Context;
 import android.util.Log;
@@ -94,7 +94,7 @@ public abstract class Poll<T> {
     * @param cleanUp
     * @return
     */
-   protected abstract int appendNewItems(ArrayList<T> newItems, Poll.Listener listener, boolean cleanUp);
+   protected abstract int appendNewItems(ArrayList<T> newItems, boolean cleanUp);
 
    /**
     * Appends old items to the {@link #list}
@@ -102,7 +102,7 @@ public abstract class Poll<T> {
     * @param listener
     * @return
     */
-   protected abstract int appendOldItems(ArrayList<T> oldItems, Poll.Listener listener);
+   protected abstract int appendOldItems(ArrayList<T> oldItems);
 
    /**
     * @param ctx
@@ -146,7 +146,7 @@ public abstract class Poll<T> {
     * @param listener
     * @param cleanUp
     */
-   public synchronized void update(final Listener listener, final boolean cleanUp) {
+   public synchronized void update(Listener listener, final boolean cleanUp) {
       if (updating == null || updating.working == false) {
          updating = new RefreshTask() {
 
@@ -163,7 +163,7 @@ public abstract class Poll<T> {
 
             @Override
             public int itemsAction(ArrayList<T> result) throws Throwable {
-               return appendNewItems(result, listener, cleanUp);
+               return appendNewItems(result, cleanUp);
             }
 
             @Override
@@ -210,7 +210,7 @@ public abstract class Poll<T> {
 
             @Override
             public int itemsAction(ArrayList<T> result) throws Throwable {
-               return appendOldItems(result, listener);
+               return appendOldItems(result);
             }
          };
       }
@@ -270,7 +270,7 @@ public abstract class Poll<T> {
    private abstract class RefreshTask extends AsyncTaskCompat<Void, Void, ArrayList<T>> {
       Throwable error;
 
-      Vector<Listener> listeners = new Vector<Listener>();
+      HashSet<WeakEqualReference<Listener>> listeners = new HashSet<WeakEqualReference<Listener>>();
       boolean working;
       boolean executed = false;
 
@@ -296,8 +296,11 @@ public abstract class Poll<T> {
       }
 
       protected void onSuccess(int result) {
-         for (Listener listener : listeners)
-            listener.onSuccess(result);
+         for (WeakEqualReference<Listener> _listener : listeners) {
+            Listener listener = _listener.get();
+            if (listener != null)
+               listener.onSuccess(result);
+         }
          listeners.clear();
          if (this == fetchingMore)
             fetchingMore = null;
@@ -307,8 +310,11 @@ public abstract class Poll<T> {
 
       protected void onError(Throwable error) {
          if (DEBUG) Log.w(getClass().getSimpleName(), "onError", error);
-         for (Listener listener : listeners)
-            listener.onError(error);
+         for (WeakEqualReference<Listener> _listener : listeners) {
+            Listener listener = _listener.get();
+            if (listener != null)
+               listener.onError(error);
+         }
          listeners.clear();
          if (this == fetchingMore)
             fetchingMore = null;
@@ -324,14 +330,16 @@ public abstract class Poll<T> {
       }
 
       protected void onStateChanged() {
-         for (Listener listener : listeners)
-            listener.onStateChanged(state);
+         for (WeakEqualReference<Listener> _listener : listeners) {
+            Listener listener = _listener.get();
+            if (listener != null)
+               listener.onStateChanged(state);
+         }
       }
 
       synchronized void refresh(Listener listener) {
          if (listener != null) {
-            if (!listeners.contains(listener))
-               listeners.add(listener);
+            listeners.add(new WeakEqualReference<Listener>(listener));
 
             if (working) {
                listener.onAlreadyPolling();
