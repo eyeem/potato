@@ -420,7 +420,11 @@ public abstract class Storage<T> {
       }
 
       private String getSerialVersionUID() {
-         return Long.toString(ObjectStreamClass.lookupAny(classname()).getSerialVersionUID());
+         ObjectStreamClass osc = ObjectStreamClass.lookup(classname());
+         if(osc != null )
+            return Long.toString(osc.getSerialVersionUID());
+         else
+            return "0";
       }
 
       private void deleteFilesRecursively(String folder) {
