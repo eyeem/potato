@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map;
@@ -28,7 +29,7 @@ import com.esotericsoftware.kryo.io.Output;
 
 /**
  * Observable storage for objects of type {@link T}. All objects
- * are stored in a {@link LruCache}. Stored items can be accessed
+ * are stored in a {@link HashMap}. Stored items can be accessed
  * directly via {@link #get(String)} or they can be organized into
  * {@link List}s. Any change in storage is reflected in relevant
  * {@link List}s. These changes can be observed using #{@link Subscription}.
@@ -50,7 +51,7 @@ public abstract class Storage<T> {
 
    private static final String DOT = ".";
 
-   LruCache<String, T> cache;
+   HashMap<String, T> cache;
    HashMap<String, WeakReference<List>> lists;
    protected HashMap<String, Subscribers> subscribers;
    Context context;
@@ -66,8 +67,8 @@ public abstract class Storage<T> {
     * Initalize storage, make sure you run this only once
     * @param size
     */
-   public void init(int size) {
-      cache = new LruCache<String, T>(this.size = size);
+   public void init() {
+      cache = new HashMap<String, T>();
       lists = new HashMap<String, WeakReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
       storage = this;
@@ -83,7 +84,7 @@ public abstract class Storage<T> {
             list.clear();
          }
       }
-      cache.evictAll();
+      cache.clear();
    }
 
    /**
@@ -130,6 +131,27 @@ public abstract class Storage<T> {
       unsubscribeAll(id);
    }
 
+   private void evictUnassociatedEntries() {
+      HashSet<String> idsToKeep = new HashSet<String>();
+      for (WeakReference<List> list_ : lists.values()) {
+         List list = list_.get();
+         if (list == null)
+            continue;
+         idsToKeep.addAll(list.ids);
+      }
+
+      HashSet<String> allIds = new HashSet<String>(cache.keySet());
+      int count = 0;
+      for (String id : allIds) {
+         if (!idsToKeep.contains(id)) {
+            if(cache.remove(id) != null) {
+               count++;
+            }
+         }
+      }
+      Log.d(getClass().getSimpleName(), "evicted " + count + " items");
+   }
+
    /**
     * Checks if item with the given id is in the storage
     * @param id
@@ -153,7 +175,7 @@ public abstract class Storage<T> {
     * @return
     */
    public Collection<T> getAll() {
-      return cache == null ? Collections.<T>emptyList() : cache.snapshot().values();
+      return cache == null ? Collections.<T>emptyList() : cache.values();
    }
 
    /**
@@ -171,9 +193,6 @@ public abstract class Storage<T> {
       for (WeakReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null && list.ids.contains(id)) {
-            if (list.ext != null) {
-               list.ext.put(id, t);
-            }
             list.subscribers.updateAll(push);
          }
       }
@@ -234,6 +253,7 @@ public abstract class Storage<T> {
     * @return
     */
    public List obtainList(String name) {
+      evictUnassociatedEntries();
       WeakReference<List> _list = lists.get(name);
       List list;
       if (_list == null) {
@@ -262,34 +282,10 @@ public abstract class Storage<T> {
    }
 
    /**
-    * Keeps items on the list, removes everything else
-    * @param list to be preserved
-    * @return removed items count
-    */
-   public int retainList(List list) {
-      int count = 0;
-      Map<String, T> snapshot = cache.snapshot();
-      for (String id : snapshot.keySet()) {
-         if (id != null && !list.ids.contains(id)) {
-            count += cache.remove(id) == null ? 0 : 1;
-         }
-      }
-      for (WeakReference<List> _otherList : lists.values()) {
-         List otherList = _otherList.get();
-         if (otherList != null) {
-            if (otherList.name.equals(list.name))
-               continue;
-            otherList.ids.clear();
-         }
-      }
-      return count;
-   }
-
-   /**
     * Current storage items count
     * @return
     */
-   public int currentSize() { return cache.snapshot().size(); }
+   public int currentSize() { return cache.size(); }
 
    /**
     * Max allowed storage items count
@@ -322,7 +318,6 @@ public abstract class Storage<T> {
       protected int trimSize;
       protected List transaction;
       protected HashMap<String, Object> meta;
-      protected HashMap<String, T> ext;
 
       private List(String name) {
          ids = new Vector<String>();
@@ -353,28 +348,6 @@ public abstract class Storage<T> {
          return meta.get(key);
       }
 
-      public void extOn() {
-         if (ext == null) {
-            ext = new HashMap<String, T>();
-         }
-      }
-
-      public void extOff() {
-         if (ext != null) {
-            Vector<String> newIds = new Vector<String>();
-            for (int i=0; i < ids.size() && i < trimSize; i++) {
-               String id = ids.get(i);
-               newIds.add(id);
-               T t = ext.get(id);
-               if (id != null && t != null)
-                  cache.put(id, t);
-            }
-            ids = newIds;
-            ext.clear();
-            ext = null;
-         }
-      }
-
       public Vector<String> ids() {
          return (Vector<String>)ids.clone();
       }
@@ -392,7 +365,6 @@ public abstract class Storage<T> {
          this.comparator = list.comparator;
          trimSize = list.trimSize;
          transaction = list;
-         ext = list.ext;
          mute();
       }
 
@@ -558,16 +530,10 @@ public abstract class Storage<T> {
       }
 
       private T get(String id) {
-         if (ext != null && ext.containsKey(id)) {
-            return ext.get(id);
-         }
          return cache.get(id);
       }
 
       private void addOrUpdate(String id, T object) {
-         if (ext != null) {
-            ext.put(id, object);
-         }
          if (indexOfId(id) < trimSize || Storage.this.contains(id))
             Storage.this.addOrUpdate(id, object);
       }
@@ -673,9 +639,6 @@ public abstract class Storage<T> {
       @Override
       public void clear() {
          ids.clear();
-         if (ext != null) {
-            ext.clear();
-         }
          subscribers.updateAll(Subscription.CLEAR);
       }
 
@@ -729,9 +692,6 @@ public abstract class Storage<T> {
       public T remove(int location) {
          String id = ids.get(location);
          ids.remove(id);
-         if (ext != null) {
-            ext.remove(id);
-         }
          subscribers.updateAll(Subscription.REMOVE);
          return cache.get(id);
       }

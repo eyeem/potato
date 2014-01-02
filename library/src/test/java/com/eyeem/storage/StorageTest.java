@@ -25,7 +25,7 @@ public class StorageTest {
             return item.id;
          }
       };
-      s.init(100);
+      s.init();
       return s;
    }
 
@@ -64,4 +64,6 @@ public class StorageTest {
       Assert.assertEquals(l.get(1).id, "3");
       Assert.assertEquals(l.get(2).id, "4");
    }
+
+   // TODO write a test for a filterSelf thingu
 }
