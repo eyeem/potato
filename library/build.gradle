@@ -24,7 +24,7 @@ dependencies {
         mavenLocal()
     }
 
-    compile 'com.esotericsoftware.kryo:kryo:2.22'
+    compile 'com.esotericsoftware.kryo:kryo:2.20'
 
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.1.+'
