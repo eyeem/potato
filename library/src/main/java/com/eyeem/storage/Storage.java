@@ -56,6 +56,7 @@ public abstract class Storage<T> {
    protected HashMap<String, Subscribers> subscribers;
    Context context;
    Storage<T> storage;
+   List persisentList;
 
    int size;
 
@@ -72,6 +73,8 @@ public abstract class Storage<T> {
       lists = new HashMap<String, WeakReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
       storage = this;
+      persisentList = obtainList("pleasedontnamemelikethisnonoohno!!1");
+      persisentList.mute();
    }
 
    /**
@@ -196,6 +199,15 @@ public abstract class Storage<T> {
             list.subscribers.updateAll(push);
          }
       }
+   }
+
+   public void retain(T t) {
+      persisentList.add(t);
+      push(t);
+   }
+
+   public void recycle(T t) {
+      persisentList.remove(t);
    }
 
    /**
