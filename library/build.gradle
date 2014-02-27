@@ -7,7 +7,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.6.+'
+        classpath 'com.android.tools.build:gradle:0.7.+'
         classpath 'com.squareup.gradle:gradle-android-test-plugin:0.9.1-SNAPSHOT'
     }
 }
@@ -24,7 +24,7 @@ dependencies {
         mavenLocal()
     }
 
-    compile files('libs/kryo-2.20-all.jar')
+    compile 'com.esotericsoftware.kryo:kryo:2.20'
 
     testCompile 'junit:junit:4.10'
     testCompile 'org.robolectric:robolectric:2.1.+'
@@ -41,7 +41,7 @@ android {
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-version = "0.9.1-SNAPSHOT"
+version = "0.9.2-SNAPSHOT"
 group = "com.eyeem.potato"
 
 configurations {

@@ -1,4 +1,4 @@
-package com.eyeem.poll;
+package com.eyeem.storage;
 
 import java.lang.ref.WeakReference;
 
