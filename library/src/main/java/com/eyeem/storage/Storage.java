@@ -375,6 +375,10 @@ public abstract class Storage<T> {
          this.name = list.name;
          this.dedupe = list.dedupe;
          this.comparator = list.comparator;
+         if (list.meta != null) {
+            this.meta = new HashMap<String, Object>();
+            this.meta.putAll(list.meta);
+         }
          trimSize = list.trimSize;
          transaction = list;
          mute();
@@ -939,15 +943,13 @@ public abstract class Storage<T> {
        * Validate transaction changes.
        */
       public void commit() {
-         if (transaction != null) {
-            transaction.ids = ids;
-            transaction.subscribers.updateAll(Subscription.COMMIT);
-         }
+         commit(new Subscription.Action(Subscription.COMMIT));
       }
 
       public void commit(Subscription.Action action) {
          if (transaction != null) {
             transaction.ids = ids;
+            transaction.meta = meta;
             transaction.subscribers.updateAll(action);
          }
       }
