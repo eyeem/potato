@@ -53,10 +53,11 @@ public abstract class Storage<T> {
 
    HashMap<String, T> cache;
    HashMap<String, WeakReference<List>> lists;
+   Vector<WeakEqualReference<List>> transactions;
    protected HashMap<String, Subscribers> subscribers;
    Context context;
    Storage<T> storage;
-   List persisentList;
+   HashSet<String> persistentItems;
 
    int size;
 
@@ -72,9 +73,9 @@ public abstract class Storage<T> {
       cache = new HashMap<String, T>();
       lists = new HashMap<String, WeakReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
+      transactions = new Vector<WeakEqualReference<List>>();
+      persistentItems = new HashSet<String>();
       storage = this;
-      persisentList = obtainList("pleasedontnamemelikethisnonoohno!!1");
-      persisentList.mute();
    }
 
    /**
@@ -88,6 +89,8 @@ public abstract class Storage<T> {
          }
       }
       cache.clear();
+      transactions.clear();
+      persistentItems.clear();
    }
 
    /**
@@ -131,12 +134,16 @@ public abstract class Storage<T> {
                list.remove(toBeRemoved);
          }
       }
+      persistentItems.remove(id);
       unsubscribeAll(id);
    }
 
    private void evictUnassociatedEntries() {
-      HashSet<String> idsToKeep = new HashSet<String>();
-      for (WeakReference<List> list_ : lists.values()) {
+      HashSet<String> idsToKeep = new HashSet<String>(persistentItems);
+
+      ArrayList<WeakReference<List>> existingLists = new ArrayList<WeakReference<List>>(lists.values());
+      existingLists.addAll(transactions);
+      for (WeakReference<List> list_ : existingLists) {
          List list = list_.get();
          if (list == null)
             continue;
@@ -202,12 +209,12 @@ public abstract class Storage<T> {
    }
 
    public void retain(T t) {
-      persisentList.add(t);
+      persistentItems.add(id(t));
       push(t);
    }
 
    public void recycle(T t) {
-      persisentList.remove(t);
+      persistentItems.remove(id(t));
    }
 
    /**
@@ -932,11 +939,13 @@ public abstract class Storage<T> {
 
       /**
        * Returns copy of the list on which you can make changes
-       * and then {@link #commit()} once you're done
+       * and then {@link #commit()} or {@link #endTransaction()} once you're done
        * @return
        */
       public List transaction() {
-         return new List(this);
+         List list = new List(this);
+         transactions.add(new WeakEqualReference<List>(list));
+         return list;
       }
 
       /**
@@ -952,6 +961,14 @@ public abstract class Storage<T> {
             transaction.meta = meta;
             transaction.subscribers.updateAll(action);
          }
+         endTransaction();
+      }
+
+      /**
+       * Ends the transaction, removes the temporary list from the tracked lists
+       */
+      public void endTransaction() {
+         transactions.remove(new WeakEqualReference<List>(this));
       }
 
       /**

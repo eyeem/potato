@@ -12,8 +12,17 @@ import org.junit.Assert;
 public class StorageTest {
 
    public static class Item {
+      public Item() {}
+      public Item(String id, String text) {
+         this.id = id;
+         this.text = text;
+      }
       String id;
       String text;
+   }
+
+   private static Item _(String id) {
+      return new Item(id, id);
    }
 
    public static Storage<Item> getStorage() {
@@ -65,5 +74,30 @@ public class StorageTest {
       Assert.assertEquals(l.get(2).id, "4");
    }
 
-   // TODO write a test for a filterSelf thingu
+   @Test public void testEvict() {
+      Storage<Item> s = getStorage();
+
+      Storage<Item>.List l1 = s.obtainList("list_1");
+      l1.add(_("ramz"));
+      l1.add(_("ronaldo"));
+      l1.add(_("martin"));
+
+      s.push(_("tobi")); // this should get evicted
+      s.retain(_("frank")); // this shouldn't
+
+      Storage<Item>.List l1_transaction = l1.transaction();
+      l1_transaction.add(_("phil"));
+
+      // eviction occurs during obtaining List
+      Storage<Item>.List l2 = s.obtainList("list_2");
+
+      Assert.assertNotNull(s.get("ramz"));
+      Assert.assertNotNull(s.get("ronaldo"));
+      Assert.assertNotNull(s.get("martin"));
+      Assert.assertNull(s.get("tobi"));
+      Assert.assertNotNull(s.get("frank"));
+      Assert.assertNotNull(s.get("phil"));
+   }
+
+   // TODO write a test for a filterSelf thingy
 }
