@@ -534,13 +534,17 @@ public abstract class Storage<T> {
        * @return true if successful, false otherwise.
        */
       public boolean saveSync() {
+         return saveSync(trimSize);
+      }
+
+      public boolean saveSync(int limit) {
          try {
             File dir = new File(dirname());
             dir.mkdirs();
             Kryo kyro = new Kryo();
             Output output;
             HashMap<String, Object> data = new HashMap<String, Object>();
-            data.put("list", toArrayList(trimSize));
+            data.put("list", toArrayList(limit));
             data.put("meta", meta);
             output = new Output(new FileOutputStream(filename()));
             kyro.writeObject(output, data);
