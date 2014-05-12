@@ -58,6 +58,7 @@ public abstract class Storage<T> {
    Context context;
    Storage<T> storage;
    HashSet<String> persistentItems;
+   Vector<List> persistentLists;
 
    int size;
 
@@ -75,6 +76,7 @@ public abstract class Storage<T> {
       subscribers = new HashMap<String, Subscribers>();
       transactions = new Vector<WeakEqualReference<List>>();
       persistentItems = new HashSet<String>();
+      persistentLists = new Vector<List>();
       storage = this;
    }
 
@@ -103,6 +105,20 @@ public abstract class Storage<T> {
             list.saveSync();
          }
       }
+   }
+
+   /**
+    * Counts all lists
+    */
+   public int listCount() {
+      int i = 0;
+      for (WeakReference<List> _list : lists.values()) {
+         List list = _list.get();
+         if (list != null) {
+            i++;
+         }
+      }
+      return i;
    }
 
    /**
@@ -334,6 +350,7 @@ public abstract class Storage<T> {
       private Vector<String> ids;
       private Subscribers subscribers;
       private String name;
+      private int retainCount;
       protected int trimSize;
       protected List transaction;
       protected HashMap<String, Object> meta;
@@ -343,6 +360,7 @@ public abstract class Storage<T> {
          subscribers = new Subscribers();
          this.name = name;
          trimSize = 30;
+         retainCount = 0;
       }
 
       public void setTrimSize(int trimSize) {
@@ -554,6 +572,25 @@ public abstract class Storage<T> {
             Log.e(classname().getSimpleName(), "save() error", e);
             return false;
          }
+      }
+
+      public void retain() {
+         if (retainCount == 0) {
+            persistentLists.add(this);
+         }
+         retainCount++;
+      }
+
+      public void recycle() {
+         retainCount--;
+         if (retainCount <= 0) {
+            retainCount = 0;
+            persistentLists.remove(this);
+         }
+      }
+
+      public int retainCount() {
+         return retainCount;
       }
 
       private T get(String id) {

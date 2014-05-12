@@ -99,5 +99,39 @@ public class StorageTest {
       Assert.assertNotNull(s.get("phil"));
    }
 
+   @Test public void testListRetainRecycle() {
+      Storage<Item> s = getStorage();
+
+      // list allocated without retain
+      {
+         s.obtainList("list_1");
+         s.obtainList("list_2");
+      }
+      System.gc(); // clear up weak refs
+
+      Assert.assertEquals(0, s.listCount());
+
+      // test retaining
+      {
+         s.obtainList("list_1").retain();
+         s.obtainList("list_1").retain();
+         s.obtainList("list_2").retain();
+      }
+      System.gc(); // clear up weak refs
+
+      Assert.assertEquals(2, s.listCount());
+      Assert.assertEquals(2, s.obtainList("list_1").retainCount());
+
+      // test recycling
+      {
+         s.obtainList("list_1").recycle();
+         s.obtainList("list_2").recycle();
+      }
+      System.gc(); // clear up weak refs
+
+      Assert.assertEquals(1, s.listCount());
+      Assert.assertEquals(1, s.obtainList("list_1").retainCount());
+   }
+
    // TODO write a test for a filterSelf thingy
 }
