@@ -8,6 +8,8 @@ import org.robolectric.Robolectric;
 import static org.fest.assertions.api.ANDROID.assertThat;
 import org.junit.Assert;
 
+import java.util.concurrent.CountDownLatch;
+
 @RunWith(RobolectricGradleTestRunner.class)
 public class StorageTest {
 
@@ -131,6 +133,27 @@ public class StorageTest {
 
       Assert.assertEquals(1, s.listCount());
       Assert.assertEquals(1, s.obtainList("list_1").retainCount());
+   }
+
+   @Test public void testDeleteSubscription() {
+      final Storage<Item> s = getStorage();
+      final CountDownLatch signal = new CountDownLatch(1);
+      s.push(_("jedrzej"));
+      Storage.Subscription jedrzej_sub = new Storage.Subscription(){
+         @Override public void onUpdate(Action action) {
+            Assert.assertNotNull(action);
+            Assert.assertEquals(Storage.Subscription.DELETE, action.name);
+            s.push(_("foo"));
+            signal.countDown();
+         }
+      };
+      s.subscribe("jedrzej", jedrzej_sub);
+      s.delete("jedrzej");
+      try {
+         signal.await();
+      } catch (InterruptedException e) {}
+      Assert.assertNull(s.get("jedrzej"));
+      Assert.assertNotNull(s.get("foo"));
    }
 
    // TODO write a test for a filterSelf thingy
