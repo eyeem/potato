@@ -139,6 +139,7 @@ public abstract class Storage<T> {
     * @param id
     */
    public void delete(String id) {
+      Subscription.Action delete = new Subscription.Action(Subscription.DELETE).param("objectId", id);
       T toBeRemoved;
       if ((toBeRemoved = cache.remove(id)) != null) {
          Set<Entry<String, WeakReference<List>>> set = lists.entrySet();
@@ -151,6 +152,9 @@ public abstract class Storage<T> {
          }
       }
       persistentItems.remove(id);
+      if (subscribers.get(id) != null) {
+         subscribers.get(id).updateAll(delete);
+      }
       unsubscribeAll(id);
    }
 
@@ -1168,6 +1172,7 @@ public abstract class Storage<T> {
       public final static String LOADED = "loaded";
       public final static String WILL_CHANGE = "willChange";
       public final static String RELOAD_QUERY = "reloadQuery";
+      public final static String DELETE = "delete";
 
       public static class Action {
          public String name;
