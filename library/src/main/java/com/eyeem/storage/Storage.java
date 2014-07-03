@@ -167,7 +167,7 @@ public abstract class Storage<T> {
          List list = list_.get();
          if (list == null)
             continue;
-         idsToKeep.addAll(list.ids);
+         idsToKeep.addAll(list.ids());
       }
 
       HashSet<String> allIds = new HashSet<String>(cache.keySet());
