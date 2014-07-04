@@ -7,13 +7,22 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.7.+'
-        classpath 'com.squareup.gradle:gradle-android-test-plugin:0.9.1-SNAPSHOT'
+        classpath 'com.android.tools.build:gradle:0.11.+'
+        classpath 'org.robolectric:robolectric-gradle-plugin:0.11.+'
     }
 }
 
 apply plugin: 'android-library'
-apply plugin: 'android-test'
+apply plugin: 'robolectric'
+
+robolectric {
+    // configure the set of classes for JUnit tests
+    include '**/*Test.class'
+    exclude '**/espresso/**/*.class'
+
+    // configure max heap size of the test JVM
+    maxHeapSize = "2048m"
+}
 
 dependencies {
     repositories {
@@ -26,14 +35,14 @@ dependencies {
 
     compile 'com.esotericsoftware.kryo:kryo:2.20'
 
-    testCompile 'junit:junit:4.10'
-    testCompile 'org.robolectric:robolectric:2.1.+'
-    testCompile 'com.squareup:fest-android:1.0.+'
+    androidTestCompile 'junit:junit:4.10'
+    androidTestCompile 'org.robolectric:robolectric:2.2+'
+    androidTestCompile 'com.squareup:fest-android:1.0.+'
 }
 
 android {
-    compileSdkVersion 18
-    buildToolsVersion '18.0.1'
+    compileSdkVersion 19
+    buildToolsVersion '19.1.0'
 }
 
 // SONATYPE DEPLOYMENT
