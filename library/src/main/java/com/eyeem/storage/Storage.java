@@ -23,6 +23,8 @@ import java.util.Vector;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -51,7 +53,7 @@ public abstract class Storage<T> {
 
    private static final String DOT = ".";
 
-   HashMap<String, T> cache;
+   ConcurrentHashMap<String, T> cache;
    HashMap<String, WeakReference<List>> lists;
    Vector<WeakEqualReference<List>> transactions;
    protected HashMap<String, Subscribers> subscribers;
@@ -71,7 +73,7 @@ public abstract class Storage<T> {
     * @param size
     */
    public void init() {
-      cache = new HashMap<String, T>();
+      cache = new ConcurrentHashMap<String, T>();
       lists = new HashMap<String, WeakReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
       transactions = new Vector<WeakEqualReference<List>>();
@@ -197,7 +199,7 @@ public abstract class Storage<T> {
     * @return
     */
    public T get(String id) {
-      return cache == null ? null : cache.get(id);
+      return cache == null || id == null ? null : cache.get(id);
    }
 
    /**
