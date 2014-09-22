@@ -1130,6 +1130,12 @@ public abstract class Storage<T> {
             subscriptions.add(subscription);
       }
 
+      public void addAllSubscribers(Subscribers from) {
+         for (Subscription s : from.subscriptions) {
+            addSubscriber(s);
+         }
+      }
+
       public void removeSubscriber(Subscription subscription) {
          subscriptions.remove(subscription);
       }
