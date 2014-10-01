@@ -49,7 +49,8 @@ public class KryoTransportLayer implements Storage.TransportLayer {
 
    public boolean loadSync(Storage.List storageList) {
       Kryo kyro = new Kryo();
-      Class klazz = storageList.getStorage().classname();
+      Storage storage = storageList.getStorage();
+      Class klazz = storage.classname();
       try {
          Input input = new Input(new FileInputStream(filename(storageList)));
          HashMap<String, Object> data = kyro.readObject(input, HashMap.class);
@@ -57,10 +58,13 @@ public class KryoTransportLayer implements Storage.TransportLayer {
          input.close();
          Storage.List transaction = storageList.transaction();
          transaction.meta = (HashMap<String, Object>)data.get("meta");
-         transaction.addAll(list);
+         // don't add objects that already exist in cache as they're most likely fresher
+         for (Object loadedObject : list) {
+            Object storedObject = storage.get(storage.id(loadedObject));
+            transaction.add(storedObject != null ? storedObject : loadedObject);
+         }
          transaction.commit(new Storage.Subscription.Action(Storage.Subscription.LOADED));
          return true;
-         // FIXME don't add objects that already exist in cache as they're most likely fresher
       } catch (FileNotFoundException e) {
          // clean up
          deleteFilesRecursively(getBaseDir(klazz), klazz);
