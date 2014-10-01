@@ -1,5 +1,5 @@
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.11'
+    gradleVersion = '1.12'
 }
 
 buildscript {
@@ -11,7 +11,7 @@ buildscript {
         mavenLocal()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.11.+'
+        classpath 'com.android.tools.build:gradle:0.12.+'
         classpath 'org.robolectric:robolectric-gradle-plugin:0.11.+'
     }
 }
