@@ -1,11 +1,5 @@
 package com.eyeem.storage;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.ObjectStreamClass;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
@@ -24,10 +17,6 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 
 /**
  * Observable storage for objects of type {@link T}. All objects
@@ -52,9 +41,10 @@ import com.esotericsoftware.kryo.io.Output;
 public abstract class Storage<T> {
 
    private static final String DOT = ".";
+   private static TransportLayer DEFAULT_TRANSPORT_LAYER = null;
 
    ConcurrentHashMap<String, T> cache;
-   HashMap<String, WeakReference<List>> lists;
+   HashMap<String, WeakEqualReference<List>> lists;
    Vector<WeakEqualReference<List>> transactions;
    protected HashMap<String, Subscribers> subscribers;
    Context context;
@@ -74,7 +64,7 @@ public abstract class Storage<T> {
     */
    public void init() {
       cache = new ConcurrentHashMap<String, T>();
-      lists = new HashMap<String, WeakReference<List>>();
+      lists = new HashMap<String, WeakEqualReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
       transactions = new Vector<WeakEqualReference<List>>();
       persistentItems = new HashSet<String>();
@@ -86,7 +76,7 @@ public abstract class Storage<T> {
     * Removes all items and lists from storage
     */
    public void clearAll() {
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null) {
             list.clear();
@@ -101,7 +91,7 @@ public abstract class Storage<T> {
     * Saves all lists
     */
    public void saveAll() {
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null) {
             list.saveSync();
@@ -114,7 +104,7 @@ public abstract class Storage<T> {
     */
    public int listCount() {
       int i = 0;
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null) {
             i++;
@@ -128,7 +118,7 @@ public abstract class Storage<T> {
     * @param selectedLists
     */
    public void save(java.util.List<String> selectedLists) {
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null && selectedLists.contains(list.name))
             list.save();
@@ -144,10 +134,10 @@ public abstract class Storage<T> {
       Subscription.Action delete = new Subscription.Action(Subscription.DELETE).param("objectId", id);
       T toBeRemoved;
       if ((toBeRemoved = cache.remove(id)) != null) {
-         Set<Entry<String, WeakReference<List>>> set = lists.entrySet();
-         Iterator<Entry<String, WeakReference<List>>> it = set.iterator();
+         Set<Entry<String, WeakEqualReference<List>>> set = lists.entrySet();
+         Iterator<Entry<String, WeakEqualReference<List>>> it = set.iterator();
          while (it.hasNext()) {
-            Entry<String, WeakReference<List>> entry = it.next();
+            Entry<String, WeakEqualReference<List>> entry = it.next();
             List list = entry.getValue().get();
             if (list != null)
                list.remove(toBeRemoved);
@@ -163,9 +153,9 @@ public abstract class Storage<T> {
    private void evictUnassociatedEntries() {
       HashSet<String> idsToKeep = new HashSet<String>(persistentItems);
 
-      ArrayList<WeakReference<List>> existingLists = new ArrayList<WeakReference<List>>(lists.values());
+      ArrayList<WeakEqualReference<List>> existingLists = new ArrayList<WeakEqualReference<List>>(lists.values());
       existingLists.addAll(transactions);
-      for (WeakReference<List> list_ : existingLists) {
+      for (WeakEqualReference<List> list_ : existingLists) {
          List list = list_.get();
          if (list == null)
             continue;
@@ -222,7 +212,7 @@ public abstract class Storage<T> {
       if (subscribers.get(id) != null) {
          subscribers.get(id).updateAll(push);
       }
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null && list.ids.contains(id)) {
             list.subscribers.updateAll(push);
@@ -277,7 +267,7 @@ public abstract class Storage<T> {
     */
    public void unsubscribeAll() {
       subscribers.clear();
-      for (WeakReference<List> _list : lists.values()) {
+      for (WeakEqualReference<List> _list : lists.values()) {
          List list = _list.get();
          if (list != null)
             list.unsubscribeAll();
@@ -295,17 +285,17 @@ public abstract class Storage<T> {
     */
    public List obtainList(String name) {
       evictUnassociatedEntries();
-      WeakReference<List> _list = lists.get(name);
+      WeakEqualReference<List> _list = lists.get(name);
       List list;
       if (_list == null) {
          list = new List(name);
-         lists.put(name, new WeakReference<List>(list));
+         lists.put(name, new WeakEqualReference<List>(list));
          return list;
       }
       list = _list.get();
       if (list == null) {
          list = new List(name);
-         lists.put(name, new WeakReference<List>(list));
+         lists.put(name, new WeakEqualReference<List>(list));
       }
       return list;
    }
@@ -438,59 +428,8 @@ public abstract class Storage<T> {
          subscribers.removeAllSubscribers();
       }
 
-      private String getSerialVersionUID() {
-         ObjectStreamClass osc = ObjectStreamClass.lookup(classname());
-         if(osc != null )
-            return Long.toString(osc.getSerialVersionUID());
-         else
-            return "0";
-      }
-
-      private void deleteFilesRecursively(String folder) {
-         try {
-            File f = new File(folder);
-            // dig deeper into that folder
-            if (f.isDirectory()) {
-               // don't delete stuff from the current folder
-               if (!f.getAbsolutePath().endsWith(getSerialVersionUID())) {
-
-                  // get the list of files to be deleted
-                  String[] list = f.list();
-                  if (list != null)
-                     for (String path : list)
-                        deleteFilesRecursively(f.getAbsolutePath() + File.separator + path);
-
-                  // don't delete the base folder, have to compare like this to account for File.separator
-                  if (!f.getAbsolutePath().equals(new File(getBaseDir()).getAbsolutePath())) {
-                     // all files deleted, let's delete the folder
-                     Log.d(this.getClass().getSimpleName(), "Storage cleanup, deleting directory: " + f.getAbsolutePath());
-                     f.delete();
-                  }
-               }
-            } else {
-               // delete this file
-               Log.d(this.getClass().getSimpleName(), "Storage cleanup, deleting file: " + f.getAbsolutePath());
-               f.delete();
-            }
-         } catch (Throwable t) {
-            // this code doesn't throw anything, ever!
-         }
-      }
-
       public String getName() {
-        return name;
-      }
-
-      private String getBaseDir() {
-         return context.getCacheDir() + File.separator + classname().getSimpleName() + File.separator;
-      }
-
-      private String dirname() {
-         return getBaseDir() + getSerialVersionUID() + File.separator;
-      }
-
-      public String filename() {
-         return dirname() + name;
+         return name;
       }
 
       /**
@@ -515,28 +454,7 @@ public abstract class Storage<T> {
        * @return
        */
       public boolean loadSync() {
-         Kryo kyro = new Kryo();
-         try {
-            Input input = new Input(new FileInputStream(filename()));
-            HashMap<String, Object> data = new HashMap<String, Object>();
-            data = kyro.readObject(input, HashMap.class);
-            ArrayList<T> list = (ArrayList<T>)data.get("list");
-            meta = (HashMap<String, Object>)data.get("meta");
-            input.close();
-            Storage<T>.List transaction = transaction();
-            transaction.addAll(list);
-            transaction.commit(new Subscription.Action(Subscription.LOADED));
-            return true;
-            // FIXME don't add objects that already exist in cache as they're most likely fresher
-         } catch (FileNotFoundException e) {
-            // clean up
-            deleteFilesRecursively(getBaseDir());
-            Log.w(classname().getSimpleName(), "load() error: file "+filename()+" missing");
-         } catch (Throwable e) {
-            Log.e(classname().getSimpleName(), "load() error", e);
-         }
-         publish(new Subscription.Action(Subscription.LOADED)); // prolly should be other thing
-         return false;
+         return transportLayer().loadSync(this);
       }
 
       /**
@@ -562,22 +480,7 @@ public abstract class Storage<T> {
       }
 
       public boolean saveSync(int limit) {
-         try {
-            File dir = new File(dirname());
-            dir.mkdirs();
-            Kryo kyro = new Kryo();
-            Output output;
-            HashMap<String, Object> data = new HashMap<String, Object>();
-            data.put("list", toArrayList(limit));
-            data.put("meta", meta);
-            output = new Output(new FileOutputStream(filename()));
-            kyro.writeObject(output, data);
-            output.close();
-            return true;
-         } catch (Throwable e) {
-            Log.e(classname().getSimpleName(), "save() error", e);
-            return false;
-         }
+         return transportLayer().saveSync(this, limit);
       }
 
       public void retain() {
@@ -601,11 +504,6 @@ public abstract class Storage<T> {
 
       private T get(String id) {
          return cache.get(id);
-      }
-
-      private void addOrUpdate(String id, T object) {
-         if (indexOfId(id) < trimSize || Storage.this.contains(id))
-            Storage.this.addOrUpdate(id, object);
       }
 
       @Override
@@ -1201,5 +1099,21 @@ public abstract class Storage<T> {
          }
       }
       public void onUpdate(Action action);
+   }
+
+   public interface TransportLayer {
+      public boolean saveSync(Storage.List list, int limit);
+      public boolean loadSync(Storage.List storageList);
+   }
+
+   protected TransportLayer transportLayer() {
+      if (DEFAULT_TRANSPORT_LAYER == null) {
+         DEFAULT_TRANSPORT_LAYER = new KryoTransportLayer(context);
+      }
+      return DEFAULT_TRANSPORT_LAYER;
+   }
+
+   public static void setDefaultTransportLayer(TransportLayer transportLayer) {
+      DEFAULT_TRANSPORT_LAYER = transportLayer;
    }
 }
