@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map.Entry;
@@ -206,9 +207,25 @@ public abstract class Storage<T> {
     * @param t
     */
    public void push(T t) {
+      pushWithParams(t, null);
+   }
+
+   /**
+    * Pushes an item to storage, notifies all relevant
+    * item & lists subscribers.
+    * @param t
+    * @param params
+    */
+   public void pushWithParams(T t, HashMap<String, Object> params) {
       String id = id(t);
       addOrUpdate(id, t);
-      Subscription.Action push = new Subscription.Action(Subscription.PUSH).param("objectId",id);
+      Subscription.Action push = new Subscription.Action(Subscription.PUSH).param("objectId", id);
+      if (params != null) {
+         for (Map.Entry<String, Object> e : params.entrySet()) {
+            push.param(e.getKey(), e.getValue());
+         }
+      }
+
       if (subscribers.get(id) != null) {
          subscribers.get(id).updateAll(push);
       }
