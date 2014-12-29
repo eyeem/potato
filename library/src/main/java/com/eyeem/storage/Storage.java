@@ -997,14 +997,13 @@ public abstract class Storage<T> {
          subscribers.updateAll(action);
       }
 
-      private Query<T> query;
-
-      public List setQuery(Query<T> query) {
-         this.query = query;
-         return this;
+      public List filter(Query query) {
+         List list = this.transaction();
+         list.filterSelf(query);
+         return list;
       }
 
-      public List reloadQuery() {
+      public List filterSelf(Query query) {
          if (query == null)
             return this;
          Vector<String> newIds = new Vector<String>();
@@ -1014,17 +1013,7 @@ public abstract class Storage<T> {
             }
          }
          this.ids = newIds;
-         sort();
          subscribers.updateAll(Subscription.RELOAD_QUERY);
-         return this;
-      }
-
-      public List filter(Query query) {
-         List list = this.transaction();
-         return list;
-      }
-
-      public List filterSelf(Query query) {
          return this;
       }
    }

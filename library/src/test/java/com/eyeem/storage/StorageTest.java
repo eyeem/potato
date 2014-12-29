@@ -156,5 +156,37 @@ public class StorageTest {
       Assert.assertNotNull(s.get("foo"));
    }
 
-   // TODO write a test for a filterSelf thingy
+   @Test public void testFilterQuery() {
+      Storage<Item> s = getStorage();
+
+      Storage<Item>.List l = s.obtainList("test");
+
+      // filter out all id's that id % 2 is 0
+      Storage.Query<Item> query = new Storage.Query<Item>(){
+         @Override public boolean eval(Item item) {
+            return Integer.valueOf(item.id) % 2 != 0;
+         }
+      };
+
+      final int n = 5;
+      for (int i = 0; i < n; i++) {
+         Item item = new Item();
+         item.id = String.valueOf(i);
+         item.text = "This is item 1";
+         l.add(item);
+      }
+
+      // list size should be n
+      Assert.assertEquals(n, l.size());
+
+      // let's filterSelf with query
+      l.filterSelf(query);
+
+      // list size should be n - 3
+      Assert.assertEquals(n - 3, l.size());
+
+      // now check the values
+      Assert.assertEquals(l.get(0).id, "1");
+      Assert.assertEquals(l.get(1).id, "3");
+   }
 }
