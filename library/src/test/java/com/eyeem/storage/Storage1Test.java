@@ -11,7 +11,7 @@ import org.junit.Assert;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class StorageTest {
+public class Storage1Test {
 
    public static class Item {
       public Item() {}
