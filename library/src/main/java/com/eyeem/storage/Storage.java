@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Vector;
 
 import android.content.Context;
 import android.util.Log;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Observable storage for objects of type {@link T}. All objects
@@ -46,12 +46,12 @@ public abstract class Storage<T> {
 
    ConcurrentHashMap<String, T> cache;
    HashMap<String, WeakEqualReference<List>> lists;
-   Vector<WeakEqualReference<List>> transactions;
+   CopyOnWriteArrayList<WeakEqualReference<List>> transactions;
    protected HashMap<String, Subscribers> subscribers;
    Context context;
    Storage<T> storage;
    HashSet<String> persistentItems;
-   Vector<List> persistentLists;
+   CopyOnWriteArrayList<List> persistentLists;
 
    int size;
 
@@ -67,9 +67,9 @@ public abstract class Storage<T> {
       cache = new ConcurrentHashMap<String, T>();
       lists = new HashMap<String, WeakEqualReference<List>>();
       subscribers = new HashMap<String, Subscribers>();
-      transactions = new Vector<WeakEqualReference<List>>();
+      transactions = new CopyOnWriteArrayList<WeakEqualReference<List>>();
       persistentItems = new HashSet<String>();
-      persistentLists = new Vector<List>();
+      persistentLists = new CopyOnWriteArrayList<List>();
       storage = this;
    }
 
@@ -360,7 +360,7 @@ public abstract class Storage<T> {
     * several locations.
     */
    public class List implements Iterable<T>, java.util.List<T> {
-      private Vector<String> ids;
+      private CopyOnWriteArrayList<String> ids;
       private Subscribers subscribers;
       private String name;
       private int retainCount;
@@ -369,7 +369,7 @@ public abstract class Storage<T> {
       protected HashMap<String, Object> meta;
 
       private List(String name) {
-         ids = new Vector<String>();
+         ids = new CopyOnWriteArrayList<String>();
          subscribers = new Subscribers();
          this.name = name;
          trimSize = 30;
@@ -398,8 +398,8 @@ public abstract class Storage<T> {
          return meta.get(key);
       }
 
-      public Vector<String> ids() {
-         return (Vector<String>)ids.clone();
+      public CopyOnWriteArrayList<String> ids() {
+         return (CopyOnWriteArrayList<String>)ids.clone();
       }
 
       /**
@@ -407,7 +407,7 @@ public abstract class Storage<T> {
        * @param list
        */
       private List(List list) {
-         ids = new Vector<String>();
+         ids = new CopyOnWriteArrayList<String>();
          ids.addAll(list.ids);
          subscribers = new Subscribers();
          this.name = list.name;
@@ -816,7 +816,7 @@ public abstract class Storage<T> {
       public void enableDedupe(boolean dedupe) {
          this.dedupe = dedupe;
          if (dedupe && ids.size() > 1) {
-            Vector<String> tmp = new Vector<String>();
+            CopyOnWriteArrayList<String> tmp = new CopyOnWriteArrayList<String>();
             for (String id : ids) {
                if (!tmp.contains(id)) {
                   tmp.add(id);
@@ -844,7 +844,7 @@ public abstract class Storage<T> {
        * @param size
        */
       public void trim(int size) {
-         Vector<String> trimmed = new Vector<String>(size);
+         CopyOnWriteArrayList<String> trimmed = new CopyOnWriteArrayList<String>();
          trimmed.addAll(ids.subList(0, Math.min(ids.size(), size)));
          ids = trimmed;
          subscribers.updateAll(Subscription.TRIM);
@@ -857,7 +857,7 @@ public abstract class Storage<T> {
        */
       public int trimAtEnd(int size) {
          int removedCount = 0;
-         Vector<String> trimmed = new Vector<String>(size);
+         CopyOnWriteArrayList<String> trimmed = new CopyOnWriteArrayList<String>();
          trimmed.addAll(ids.subList(Math.max(0, ids.size() - size), ids.size()));
          removedCount = ids.size() - trimmed.size();
          ids = trimmed;
@@ -878,7 +878,7 @@ public abstract class Storage<T> {
             return 0;
          java.util.List<String> start = ids.subList(0, size);
          java.util.List<String> end = ids.subList(n-size, n);
-         Vector<String> newIds = new Vector<String>();
+         CopyOnWriteArrayList<String> newIds = new CopyOnWriteArrayList<String>();
          newIds.addAll(start);
          newIds.addAll(end);
          ids = newIds;
@@ -938,7 +938,11 @@ public abstract class Storage<T> {
        * @return
        */
       public String lastId() {
-         return ids.lastElement();
+         try {
+           return ids.get(ids.size() - 1);
+         } catch (Exception e) {
+           return null;
+         }
       }
 
       /**
@@ -1006,7 +1010,7 @@ public abstract class Storage<T> {
       public List filterSelf(Query query) {
          if (query == null)
             return this;
-         Vector<String> newIds = new Vector<String>();
+         CopyOnWriteArrayList<String> newIds = new CopyOnWriteArrayList<String>();
          for (T t : getAll()) {
             if (query.eval(t)) {
                newIds.add(id(t));
