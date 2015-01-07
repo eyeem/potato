@@ -399,7 +399,7 @@ public abstract class Storage<T> {
       }
 
       public CopyOnWriteArrayList<String> ids() {
-         return (CopyOnWriteArrayList<String>)ids.clone();
+         return ids;
       }
 
       /**
