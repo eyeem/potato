@@ -8,6 +8,8 @@ import org.robolectric.Robolectric;
 import static org.fest.assertions.api.ANDROID.assertThat;
 import org.junit.Assert;
 
+import java.util.Comparator;
+
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(RobolectricGradleTestRunner.class)
@@ -188,5 +190,41 @@ public class Storage1Test {
       // now check the values
       Assert.assertEquals(l.get(0).id, "1");
       Assert.assertEquals(l.get(1).id, "3");
+   }
+
+   @Test public void testSort() {
+      Storage<Item> s = getStorage();
+
+      Storage<Item>.List l = s.obtainList("test");
+
+      // random order
+      l.add(_("F"));
+      l.add(_("G"));
+      l.add(_("A"));
+      l.add(_("B"));
+      l.add(_("H"));
+      l.add(_("D"));
+
+      // list size should be 6
+      Assert.assertEquals(6, l.size());
+
+      // sort
+      l.sortSelf(new Comparator<Item>(){
+         @Override
+         public int compare(Item lhs, Item rhs) {
+            return lhs.text.compareTo(rhs.text);
+         }
+      });
+
+      // alphabetical order
+      Assert.assertEquals(l.get(0).id, "A");
+      Assert.assertEquals(l.get(1).id, "B");
+      Assert.assertEquals(l.get(2).id, "D");
+      Assert.assertEquals(l.get(3).id, "F");
+      Assert.assertEquals(l.get(4).id, "G");
+      Assert.assertEquals(l.get(5).id, "H");
+
+      // list size should be 6
+      Assert.assertEquals(6, l.size());
    }
 }

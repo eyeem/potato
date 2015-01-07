@@ -827,9 +827,14 @@ public abstract class Storage<T> {
       }
 
       private void sort() {
+         sortSelf(this.comparator);
+      }
+
+      public void sortSelf(final Comparator<T> comparator) {
          if (comparator == null)
             return;
-         Collections.sort(ids, new Comparator<String>() {
+         ArrayList<String> mutableIds = new ArrayList<String>(ids);
+         Collections.sort(mutableIds, new Comparator<String>() {
             @Override
             public int compare(String lhs, String rhs) {
                T tLhs = get(lhs);
@@ -837,6 +842,8 @@ public abstract class Storage<T> {
                return comparator.compare(tLhs, tRhs);
             }
          });
+         ids.clear();
+         ids.addAll(mutableIds);
       }
 
       /**
