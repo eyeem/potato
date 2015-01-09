@@ -21,6 +21,8 @@ import java.util.NoSuchElementException;
 
 @RunWith(RobolectricGradleTestRunner.class)
 /**
+ * NOTE: This class is adapted from here: http://cs.gmu.edu/~pammann/637/javaIDM/idmTests.java
+ *
  * This class contains 13 JUnit tests for the Iterator interface. The tests are derived from an
  * IDM (input domain modeling) based on the JavaDoc API for Iterator.
  * The three methods tested are: hasNext(), next(), remove()
@@ -42,6 +44,13 @@ public class StorageIteratorTest {
       }
       String id;
       String text;
+
+      @Override public boolean equals(Object o) {
+         if (o instanceof Item)
+            return ((Item) o).id.equals(id);
+         else
+            return super.equals(o);
+      }
    }
 
    private static Item _(String id) {
@@ -101,10 +110,9 @@ public class StorageIteratorTest {
     * Characteristics and Test Frames: C1-T, C5-F
     * C1-T: iterator has more values - hasNext() does not return false
     * C5-F: collection not in inconsistent state while iterator in use - 
-    *   hasNext() results in a ConcurrentModificationException
-    *   *Currently expect this test to fail.*
+    *   hasNext() DOES NOT results in a ConcurrentModificationException
     */
-   @Test(expected=ConcurrentModificationException.class)
+   @Test
    public final void testHasNext_C5() 
    {
       List s = testList();
@@ -112,6 +120,8 @@ public class StorageIteratorTest {
       Iterator itr = s.iterator();
       s.add(_("dog"));
       assertTrue(itr.hasNext());
+      itr.next();
+      assertFalse(itr.hasNext());
    }//TestHasNext_C5
    
    
@@ -165,14 +175,11 @@ public class StorageIteratorTest {
     * C5-T: collection in consistent state while iterator in use - 
     *    next() does not result in a ConcurrentModificationException
     */
-   @Test
+   @Test(expected=NullPointerException.class)
    public final void testNext_C2() throws ConcurrentModificationException 
    {
       List s = testList();
-      s.add(null);
-      Iterator itr = s.iterator();
-      assertTrue(itr.hasNext()); 
-      assertNull(itr.next());
+      s.add(null); // null objects are not tolerated by potato
    }//testNext_C2
    
    /**
@@ -182,9 +189,9 @@ public class StorageIteratorTest {
     * C2-dc:  iterator rtns a non-null obj ref - 
     *    due to the thrown exception, the return value doesn't matter
     * C5-F:  collection not in consistent state while iterator in use - 
-    *    next() results in a ConcurrentModificationException
+    *    next() DOES NOT results in a ConcurrentModificationException
     */
-   @Test(expected=ConcurrentModificationException.class)
+   @Test
    public final void testNext_C5()  
    {
       List s = testList();
@@ -192,7 +199,8 @@ public class StorageIteratorTest {
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext());
       s.add(_("dog"));
-      itr.next();    
+      itr.next();
+      assertFalse(itr.hasNext());    
    }//testNext_C5
    
    
@@ -210,8 +218,10 @@ public class StorageIteratorTest {
     * C3-T: remove() is supported - remove() does not result in an UnsupportedOperationException
     * C4-T: remove() precondition is satisfied - remove() does not result in an IllegalStateException
     * C5-T: collection in consistent state while iterator in use - remove() does not result in a ConcurrentModificationException
+    *
+    * POTATO NOTE: lists rely on CopyOnWriteArrayList so Iterator.remove is not supported
     */
-   @Test
+   @Test(expected=UnsupportedOperationException.class)
    public final void testRemove_BaseCase() throws UnsupportedOperationException, 
    IllegalStateException, ConcurrentModificationException   
    {
@@ -233,8 +243,10 @@ public class StorageIteratorTest {
     * C4-T: remove() precondition is satisfied - remove() does not result in an IllegalStateException
     * C5-T: collection in consistent state while iterator in use - 
     *    remove() does not result in a ConcurrentModificationException
+    *
+    * POTATO NOTE: null objects are not allowed by potato
     */
-   @Test
+   @Test(expected=NullPointerException.class)
    public final void testRemove_C1() throws UnsupportedOperationException, 
    IllegalStateException, ConcurrentModificationException, NoSuchElementException 
    {
@@ -265,8 +277,10 @@ public class StorageIteratorTest {
     * C4-T: remove() precondition is satisfied - remove() does not result in an IllegalStateException
     * C5-T: collection in consistent state while iterator in use - 
     *    remove() does not result in a ConcurrentModificationException
+    *
+    * POTATO NOTE: null objects are not allowed by potato
     */
-   @Test
+   @Test(expected=NullPointerException.class)
    public final void testRemove_C2() throws UnsupportedOperationException, 
    IllegalStateException, ConcurrentModificationException 
    {
@@ -309,8 +323,10 @@ public class StorageIteratorTest {
     * C3-T: remove() is supported - remove() does not result in an UnsupportedOperationException
     * C4-F: remove() precondition is not satisfied - remove() results in an IllegalStateException
     * C5-T: collection in consistent state while iterator in use - remove() does not result in a ConcurrentModificationException
+    *
+    * POTATO NOTE: List depends on CopyOnWriteArrayList so this is not supported
     */
-   @Test(expected=IllegalStateException.class)
+   @Test(expected=UnsupportedOperationException.class)
    public final void testRemove_C4() throws UnsupportedOperationException, 
     ConcurrentModificationException 
    {
@@ -333,8 +349,10 @@ public class StorageIteratorTest {
     * C4-T: remove() precondition is satisfied - remove() does not result in an IllegalStateException
     * C5-F: collection in inconsistent state while iterator in use - 
     *    remove() results in a ConcurrentModificationException
+    *
+    * POTATO NOTE: List depends on CopyOnWriteArrayList so this is not supported
     */
-   @Test(expected=ConcurrentModificationException.class)
+   @Test(expected=UnsupportedOperationException.class)
    public final void testRemove_C5() throws UnsupportedOperationException, 
    IllegalStateException, ConcurrentModificationException  
    {
