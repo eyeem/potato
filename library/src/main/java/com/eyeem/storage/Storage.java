@@ -77,15 +77,17 @@ public abstract class Storage<T> {
     * Removes all items and lists from storage
     */
    public void clearAll() {
-      for (WeakEqualReference<List> _list : lists.values()) {
-         List list = _list.get();
-         if (list != null) {
-            list.clear();
+      try {
+         for (WeakEqualReference<List> _list : lists.values()) {
+            List list = _list.get();
+            if (list != null) {
+               list.clear();
+            }
          }
-      }
-      cache.clear();
-      transactions.clear();
-      persistentItems.clear();
+         cache.clear();
+         transactions.clear();
+         persistentItems.clear();
+      } catch (NullPointerException npe) { /* NO-OP */ }
    }
 
    /**
