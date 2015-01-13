@@ -240,6 +240,7 @@ public abstract class Storage<T> {
    }
 
    public void retain(T t) {
+      if (t == null) return;
       persistentItems.add(id(t));
       push(t);
    }

@@ -13,7 +13,7 @@ import java.util.Comparator;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class Storage1Test {
+public class StorageBaseTest {
 
    public static class Item {
       public Item() {}
@@ -226,5 +226,10 @@ public class Storage1Test {
 
       // list size should be 6
       Assert.assertEquals(6, l.size());
+   }
+
+   @Test public void testRetainNull() {
+      Storage<Item> s = getStorage();
+      s.retain(null); // this call shouldn't throw, instead should be ignored
    }
 }

@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricGradleTestRunner.class)
-public class Storage2Test {
+public class StorageConcurrentTest {
 
    public static class Item {
       public Item() {}
