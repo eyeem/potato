@@ -395,10 +395,22 @@ public abstract class Storage<T> {
          return this;
       }
 
+      public List setMeta(HashMap<String, Object> meta) {
+        this.meta = meta;
+        return this;
+      }
+
       public Object getMeta(String key) {
          if (meta == null)
             return null;
          return meta.get(key);
+      }
+
+      /**
+       * Returns a mutable copy of the meta data or null
+       */
+      public HashMap<String, Object> getMeta() {
+         return meta != null ? new HashMap<String, Object>(meta) : null;
       }
 
       public CopyOnWriteArrayList<String> ids() {
