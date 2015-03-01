@@ -395,6 +395,11 @@ public abstract class Storage<T> {
          return this;
       }
 
+      public List setMeta(HashMap<String, Object> meta) {
+        this.meta = meta;
+        return this;
+      }
+
       public Object getMeta(String key) {
          if (meta == null)
             return null;
