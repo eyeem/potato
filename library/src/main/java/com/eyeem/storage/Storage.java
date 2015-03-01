@@ -401,6 +401,13 @@ public abstract class Storage<T> {
          return meta.get(key);
       }
 
+      /**
+       * Returns a mutable copy of the meta data or null
+       */
+      public HashMap<String, Object> getMeta() {
+         return meta != null ? new HashMap<String, Object>(meta) : null;
+      }
+
       public CopyOnWriteArrayList<String> ids() {
          return ids;
       }
