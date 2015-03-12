@@ -4,21 +4,17 @@ Potato Library
 =================
 
 Sick of Android ContentProvider & SQLite database nonsense? This might be your next
-favorite library. An object oriented observable storage & content polling
-solution in one. Simpler than counting to potato.
+favorite library. An object oriented observable storage. Simpler than counting to potato.
 
 Usage
 ============
-The following code snippets cover basics of this library. For more see
+The following code snippet covers basics of this library. For more see
 sample apps.
+
 ``` java
 // Let's say we need to store Tweet objects, first
 // we need to extend Storage
 class TweetStorage extends Storage<Tweet> {
-
-   public TweetStorage(Context context) {
-      super(context);
-   }
 
    // ...override these 2 methods
 
@@ -34,81 +30,59 @@ class TweetStorage extends Storage<Tweet> {
 
    // ...and have some sort of singleton for the storage
 
+   private TweetStorage(Context context) {
+      super(context);
+   }
+
    private static TweetStorage sInstance = null;
 
-   public static void initialize(Context context) {
+   public static TweetStorage getInstance(){
       if (sInstance == null) {
          sInstance = new TweetStorage(context);
-         // setup maximum items size
-         sInstance.init(100);
+         sInstance.init();
       }
-   }
-
-   public static TweetStorage getInstance(){
       return sInstance;
    }
-}
+} // that's it!
 
-// ... now somewhere you should be able to do things like:
+// ... now somewhere in your code you can do things like this:
 TweetStorage.List homeTimeline = TweetStorage.obtainList("home_timeline");
 homeTimeline.subscribe(new Subscription() {
       @Override
-      public void onUpdate() {
+      public void onUpdate(Action action) {
          // ...OMG MOAR TWEETS
          // add code here to update UI
       }
    });
+
+// somewhere else in the code you can call something like this
+// it will populate ADD_ALL action to your subscribers
 homeTimeline.addAll(newTweetsIFetchedFromTheInternet);
 ```
 
-There's more to the potato! You can use Poll class to manage content fetching
-and combine it with some predefined UI components.
+There's more to the potato! You can override standard persistence layer (`KryoTransportLayer`) and have all of your items stored in a SQLite database. See `SQLiteTransportLayer`
 
-``` java
-// ...and bind the Poll with PollListView
+Including in your project
+=========================
 
-class TimelineActivity extends Activity {
-
-   class HomeTimelinePoll extends Poll<Tweet> {
-      // ...API CALLS HERE
-   }
-
-   PollListView listView;
-   HomeTimelinePoll poll;
-
-   @Override
-   protected void onCreate(Bundle bundle) {
-      super.onCreate(bundle);
-
-      // setup poll
-      poll = new HomeTimelinePoll();
-      poll.setStorage(TweetStorage.getInstance().obtainList("home_timeline"));
-
-      // setup list view
-      listView = (PollListView) findViewById(R.id.myListView);
-      listView.setPoll(poll);
-      listView.setDataAdapter(new TweetAdapter());
-   }
-
-   @Override
-   protected void onResume() {
-      listView.onResume();
-   }
-
-   @Override
-   protected void onPause() {
-      listView.onPause();
-   }
-}
-
-
+You can either check out the repo manually or grab a snapshot `aar` which is hosted on sonatype repo. To do so, include this in your build.gradle file:
 
 ```
+dependencies {
 
-Dependencies
-============
+    repositories {
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+        mavenCentral()
+        mavenLocal()
+    }
 
-To build the included example application you will need our forked [PullToRefresh library](https://github.com/eyeem/Android-PullToRefresh).
+    compile 'com.eyeem.potato:library:0.9.2.5-SNAPSHOT@aar'
+
+    // ...other dependencies
+}
+```
 
 Developed By
 ============
@@ -119,7 +93,7 @@ Developed By
 License
 =======
 
-    Copyright 2012 EyeEm Mobile GmbH
+    Copyright 2012-2015 EyeEm Mobile GmbH
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
