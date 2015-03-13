@@ -14,6 +14,8 @@ import com.eyeem.storage.Storage;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -138,7 +140,9 @@ public class Database {
             ListDescriptor listDescriptor = readListDescriptor(db, transaction.getName());
             if (listDescriptor != null) {
                transaction.setMeta(listDescriptor.meta);
-               transaction.addAll(readObjects(db, listDescriptor.idsSQL()));
+               List tmpList = readObjects(db, listDescriptor.idsSQL());
+               Collections.sort(tmpList, listDescriptor.comparator(converter));
+               transaction.addAll(tmpList);
             }
 
             db.setTransactionSuccessful();
@@ -305,6 +309,19 @@ public class Database {
             escapedIds.add("'"+ id + "'");
          }
          return TextUtils.join(",", escapedIds);
+      }
+
+      public Comparator comparator(final Converter converter) {
+         return new Comparator() {
+            public int compare(Object lhs, Object rhs) {
+               int index_lhs = (ids == null || lhs == null || converter == null) ? -1 : ids.indexOf(converter.id(lhs));
+               int index_rhs = (ids == null || rhs == null || converter == null) ? -1 : ids.indexOf(converter.id(rhs));
+
+               if (index_lhs == -1) index_lhs = Integer.MAX_VALUE;
+               if (index_rhs == -1) index_rhs = Integer.MAX_VALUE;
+               return index_lhs < index_rhs ? -1 : (index_lhs == index_rhs ? 0 : 1);
+            }
+         };
       }
    }
 }
