@@ -36,7 +36,7 @@ public class SQLiteTransportLayer implements Storage.TransportLayer {
        */
       public String id(Object object);
 
-      public Object fromString(String objectString);
+      public Object fromString(String objectId, String objectString);
       public HashMap<String, Object> fromMetaString(String objectString);
    }
 }

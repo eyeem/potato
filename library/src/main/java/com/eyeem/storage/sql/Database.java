@@ -169,7 +169,7 @@ public class Database {
 
             if (TextUtils.isEmpty(object_id) || TextUtils.isEmpty(object_json)) continue;
 
-            Object object = converter.fromString(object_json);
+            Object object = converter.fromString(object_id, object_json);
 
             if (object == null) continue;
 
