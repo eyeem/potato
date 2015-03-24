@@ -1033,7 +1033,7 @@ public abstract class Storage<T> {
          if (query == null)
             return this;
          CopyOnWriteArrayList<String> newIds = new CopyOnWriteArrayList<String>();
-         for (T t : getAll()) {
+         for (T t : this) {
             if (query.eval(t)) {
                newIds.add(id(t));
             }
