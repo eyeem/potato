@@ -131,9 +131,9 @@ public class Database {
          if (list == null)
             return false;
          SQLiteDatabase db = read();
-         if(db == null)
+         if (db == null)
             return false;
-         db.beginTransaction();
+
          Storage.List transaction = list.transaction();
          try {
             // first read ids & meta
@@ -145,12 +145,9 @@ public class Database {
                transaction.addAll(tmpList);
             }
 
-            db.setTransactionSuccessful();
-
             return true;
          } finally {
-            db.endTransaction();
-            db.close();
+            if (db.isOpen()) db.close();
             transaction.commit(new Storage.Subscription.Action(Storage.Subscription.LOADED));
          }
       }
