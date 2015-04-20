@@ -1,18 +1,19 @@
 package com.eyeem.storage;
 
-import org.fest.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 
-import static org.fest.assertions.api.ANDROID.assertThat;
 import org.junit.Assert;
+import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.util.Comparator;
 
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(RobolectricGradleTestRunner.class)
+@Config(constants = BuildConfig.class, emulateSdk = 21)
 public class StorageBaseTest {
 
    public static class Item {
@@ -25,12 +26,12 @@ public class StorageBaseTest {
       String text;
    }
 
-   private static Item _(String id) {
+   private static Item __(String id) {
       return new Item(id, id);
    }
 
    public static Storage<Item> getStorage() {
-      Storage<Item> s = new Storage<Item>(Robolectric.application){
+      Storage<Item> s = new Storage<Item>(RuntimeEnvironment.application){
          @Override public Class<Item> classname() {
             return Item.class;
          }
@@ -82,15 +83,15 @@ public class StorageBaseTest {
       Storage<Item> s = getStorage();
 
       Storage<Item>.List l1 = s.obtainList("list_1");
-      l1.add(_("ramz"));
-      l1.add(_("ronaldo"));
-      l1.add(_("martin"));
+      l1.add(__("ramz"));
+      l1.add(__("ronaldo"));
+      l1.add(__("martin"));
 
-      s.push(_("tobi")); // this should get evicted
-      s.retain(_("frank")); // this shouldn't
+      s.push(__("tobi")); // this should get evicted
+      s.retain(__("frank")); // this shouldn't
 
       Storage<Item>.List l1_transaction = l1.transaction();
-      l1_transaction.add(_("phil"));
+      l1_transaction.add(__("phil"));
 
       // eviction occurs during obtaining List
       Storage<Item>.List l2 = s.obtainList("list_2");
@@ -140,12 +141,12 @@ public class StorageBaseTest {
    @Test public void testDeleteSubscription() {
       final Storage<Item> s = getStorage();
       final CountDownLatch signal = new CountDownLatch(1);
-      s.push(_("jedrzej"));
+      s.push(__("jedrzej"));
       Storage.Subscription jedrzej_sub = new Storage.Subscription(){
          @Override public void onUpdate(Action action) {
             Assert.assertNotNull(action);
             Assert.assertEquals(Storage.Subscription.DELETE, action.name);
-            s.push(_("foo"));
+            s.push(__("foo"));
             signal.countDown();
          }
       };
@@ -198,12 +199,12 @@ public class StorageBaseTest {
       Storage<Item>.List l = s.obtainList("test");
 
       // random order
-      l.add(_("F"));
-      l.add(_("G"));
-      l.add(_("A"));
-      l.add(_("B"));
-      l.add(_("H"));
-      l.add(_("D"));
+      l.add(__("F"));
+      l.add(__("G"));
+      l.add(__("A"));
+      l.add(__("B"));
+      l.add(__("H"));
+      l.add(__("D"));
 
       // list size should be 6
       Assert.assertEquals(6, l.size());

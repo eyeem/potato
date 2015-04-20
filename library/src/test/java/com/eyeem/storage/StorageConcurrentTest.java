@@ -1,13 +1,12 @@
 package com.eyeem.storage;
 
-import org.fest.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 
-import static org.fest.assertions.api.ANDROID.assertThat;
 import static org.junit.Assert.assertTrue;
-import org.junit.Assert;
+import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricGradleTestRunner.class)
+@Config(constants = BuildConfig.class, emulateSdk = 21)
 public class StorageConcurrentTest {
 
    public static class Item {
@@ -30,12 +30,12 @@ public class StorageConcurrentTest {
       String text;
    }
 
-   private static Item _(String id) {
+   private static Item __(String id) {
       return new Item(id, id);
    }
 
    public static Storage<Item> getStorage() {
-      Storage<Item> s = new Storage<Item>(Robolectric.application){
+      Storage<Item> s = new Storage<Item>(RuntimeEnvironment.application){
          @Override public Class<Item> classname() {
             return Item.class;
          }

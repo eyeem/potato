@@ -1,25 +1,23 @@
 package com.eyeem.storage;
 
-import org.fest.util.Arrays;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import org.junit.Assert;
-
-import java.util.Comparator;
+import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RuntimeEnvironment;
+import org.robolectric.annotation.Config;
 
 import java.util.List;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 
 @RunWith(RobolectricGradleTestRunner.class)
+@Config(constants = BuildConfig.class, emulateSdk = 21)
 /**
  * NOTE: This class is adapted from here: http://cs.gmu.edu/~pammann/637/javaIDM/idmTests.java
  *
@@ -53,12 +51,12 @@ public class StorageIteratorTest {
       }
    }
 
-   private static Item _(String id) {
+   private static Item __(String id) {
       return new Item(id, id);
    }
 
    public static Storage<Item> getStorage() {
-      Storage<Item> s = new Storage<Item>(Robolectric.application){
+      Storage<Item> s = new Storage<Item>(RuntimeEnvironment.application){
          @Override public Class<Item> classname() {
             return Item.class;
          }
@@ -85,8 +83,8 @@ public class StorageIteratorTest {
    public final void testHasNext_BaseCase() throws ConcurrentModificationException 
    {
       List s = testList();
-      s.add(_("cat"));
-      s.add(_("dog"));
+      s.add(__("cat"));
+      s.add(__("dog"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext()); 
    }//TestHasNext_BaseCase
@@ -116,9 +114,9 @@ public class StorageIteratorTest {
    public final void testHasNext_C5() 
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
-      s.add(_("dog"));
+      s.add(__("dog"));
       assertTrue(itr.hasNext());
       itr.next();
       assertFalse(itr.hasNext());
@@ -143,10 +141,10 @@ public class StorageIteratorTest {
    public final void testNext_BaseCase() throws ConcurrentModificationException 
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext()); 
-      assertEquals(_("cat"), itr.next());
+      assertEquals(__("cat"), itr.next());
    }//testNext_BaseCase
    
    /**
@@ -195,10 +193,10 @@ public class StorageIteratorTest {
    public final void testNext_C5()  
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext());
-      s.add(_("dog"));
+      s.add(__("dog"));
       itr.next();
       assertFalse(itr.hasNext());    
    }//testNext_C5
@@ -226,10 +224,10 @@ public class StorageIteratorTest {
    IllegalStateException, ConcurrentModificationException   
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext()); 
-      assertEquals(_("cat"), itr.next());
+      assertEquals(__("cat"), itr.next());
       itr.remove();
    }//testNext_BaseCase
    
@@ -308,10 +306,10 @@ public class StorageIteratorTest {
    {
       //AbstractList aL = testList();//new ArrayList(sA);
       List t = testList();
-      t = java.util.Arrays.asList(_("cat"));
+      t = java.util.Arrays.asList(__("cat"));
       Iterator itr = t.iterator();
       assertTrue(itr.hasNext()); 
-      assertEquals(_("cat"), itr.next());
+      assertEquals(__("cat"), itr.next());
       itr.remove();
    }//testRemove_C3
    
@@ -331,10 +329,10 @@ public class StorageIteratorTest {
     ConcurrentModificationException 
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext()); 
-      assertEquals(_("cat"), itr.next());
+      assertEquals(__("cat"), itr.next());
       itr.remove();
       itr.remove();
    }//testRemove_C4
@@ -357,11 +355,11 @@ public class StorageIteratorTest {
    IllegalStateException, ConcurrentModificationException  
    {
       List s = testList();
-      s.add(_("cat"));
+      s.add(__("cat"));
       Iterator itr = s.iterator();
       assertTrue(itr.hasNext());
       itr.next();    
-      s.add(_("dog"));
+      s.add(__("dog"));
       itr.remove();
    }//testRemove_C5
 
