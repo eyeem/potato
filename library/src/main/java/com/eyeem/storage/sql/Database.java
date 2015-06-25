@@ -127,6 +127,24 @@ public class Database {
          }
       }
 
+      public boolean saveObject(Object object) {
+         if (object == null)
+            return false;
+         SQLiteDatabase db = write();
+         if(db == null)
+            return false;
+         db.beginTransaction();
+         try {
+            ObjectsTable.insertOrUpdate(object, db, converter);
+            db.setTransactionSuccessful();
+            if (uri != null) context.getContentResolver().notifyChange(uri, null);
+            return true;
+         } finally {
+            db.endTransaction();
+            db.close();
+         }
+      }
+
       public boolean load(Storage.List list) {
          if (list == null)
             return false;

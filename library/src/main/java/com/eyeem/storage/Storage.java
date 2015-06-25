@@ -213,6 +213,15 @@ public abstract class Storage<T> {
    }
 
    /**
+    * Save an individual item to persistence.
+    * @param t
+    * @return true if successful, false otherwise.
+    */
+   public boolean saveSyncObject(T t) {
+      return transportLayer().saveSyncObject(t);
+   }
+
+   /**
     * Pushes an item to storage, notifies all relevant
     * item & lists subscribers.
     * @param t
@@ -466,8 +475,10 @@ public abstract class Storage<T> {
 
       /**
        * Load items from persistence. Async.
+       *
+       * Deprecated: Please use sync method within any thread poll executor of your choice
        */
-      public void load() {
+      @Deprecated public void load() {
          if (size() > 0)
             return;
          Thread t = new Thread(new Runnable() {
@@ -491,8 +502,10 @@ public abstract class Storage<T> {
 
       /**
        * Persist items. Async.
+       *
+       * Deprecated: Please use sync method within any thread poll executor of your choice
        */
-      public void save() {
+      @Deprecated public void save() {
          Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -1135,6 +1148,7 @@ public abstract class Storage<T> {
 
    public interface TransportLayer {
       public boolean saveSync(Storage.List list, int limit);
+      public boolean saveSyncObject(Object object);
       public boolean loadSync(Storage.List storageList);
    }
 

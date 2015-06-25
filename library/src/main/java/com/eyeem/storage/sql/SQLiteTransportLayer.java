@@ -21,6 +21,10 @@ public class SQLiteTransportLayer implements Storage.TransportLayer {
       return helper.save(list);
    }
 
+   @Override public boolean saveSyncObject(Object object) {
+      return helper.saveObject(object);
+   }
+
    @Override public boolean loadSync(Storage.List list) {
       return helper.load(list);
    }

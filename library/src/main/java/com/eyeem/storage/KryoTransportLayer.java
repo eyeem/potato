@@ -47,6 +47,10 @@ public class KryoTransportLayer implements Storage.TransportLayer {
       }
    }
 
+   @Override public boolean saveSyncObject(Object object) {
+      throw new UnsupportedOperationException("kryo transport layer does not support individual object persistence");
+   }
+
    public boolean loadSync(Storage.List storageList) {
       Kryo kyro = new Kryo();
       Storage storage = storageList.getStorage();
