@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.eyeem.storage.sample">
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="sample">
+
+    </application>
+
+</manifest>
