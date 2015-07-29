@@ -15,7 +15,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
+@SupportedSourceVersion(SourceVersion.RELEASE_7)
 @SupportedAnnotationTypes("com.eyeem.storage.annotation.Storage")
 public class Processor extends AbstractProcessor implements CodeWriter.Log {
     @Override
