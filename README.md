@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/eyeem/PotatoLibrary.png?branch=master)](https://travis-ci.org/eyeem/PotatoLibrary)
+[![Build Status](https://travis-ci.org/eyeem/potato.png?branch=master)](https://travis-ci.org/eyeem/potato)
 
 Potato Library
 =================
