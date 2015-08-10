@@ -38,3 +38,9 @@ dependencies {
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+project.gradle.taskGraph.whenReady {
+    connectedAndroidTest {
+        ignoreFailures = true
+    }
+}
